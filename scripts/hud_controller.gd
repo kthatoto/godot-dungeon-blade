@@ -202,11 +202,10 @@ func _update_skill_hud(skill_sys: Node) -> void:
 		var ratio: float = skill_sys.get_cooldown_ratio(i)
 
 		if not unlocked:
-			slot["cd_overlay"].size.y = 56
-			slot["cd_overlay"].color = Color(0, 0, 0, 0.7)
-			slot["cd_label"].text = ""
-			slot["key_label"].add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
-		elif ratio > 0:
+			slot["panel"].visible = false
+			continue
+		slot["panel"].visible = true
+		if ratio > 0:
 			slot["cd_overlay"].size.y = 56.0 * ratio
 			slot["cd_overlay"].color = Color(0, 0, 0, 0.5)
 			var remaining: float = skill_sys.slots[i]["cooldown_current"]
@@ -272,14 +271,14 @@ func _update_item_hotbar(gm: Node) -> void:
 	for i in range(_item_slots.size()):
 		var slot: Dictionary = _item_slots[i]
 		if i < inv.size():
+			slot["panel"].visible = true
 			var item_id: String = inv[i]
 			var item_data: Dictionary = ItemDatabase.get_item(item_id)
 			slot["name_label"].text = item_data.get("name", item_id)
 			var color: Color = item_data.get("icon_color", Color.WHITE)
 			slot["key_label"].add_theme_color_override("font_color", color)
 		else:
-			slot["name_label"].text = ""
-			slot["key_label"].add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
+			slot["panel"].visible = false
 
 func _get_game_manager() -> Node:
 	var root_children := get_tree().root.get_children()
