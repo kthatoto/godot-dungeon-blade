@@ -11,15 +11,16 @@ const ItemDatabase = preload("res://scripts/item_database.gd")
 var _overlay: ColorRect = null
 var _message_label: Label = null
 var _game_ended: bool = false
-var _skill_slots: Array[Dictionary] = []  # { "panel", "key_label", "cd_overlay", "cd_label" }
-var _item_slots: Array[Dictionary] = []   # { "panel", "key_label", "name_label" }
+var _skill_slots: Array[Dictionary] = []
+var _item_slots: Array[Dictionary] = []
+var _skill_bar_created: bool = false
+var _item_bar_created: bool = false
 
 func _ready() -> void:
 	_update_hp(100, 100)
 	_update_room(0)
 	_update_gold(0)
-	_create_skill_hud()
-	_create_item_hotbar()
+	# Skill and item bars created on demand in _process
 	# Create overlay for death/victory (hidden initially)
 	_create_overlay()
 
@@ -196,15 +197,29 @@ func _create_skill_hud() -> void:
 		})
 
 func _update_skill_hud(skill_sys: Node) -> void:
+	# Check if any skill is unlocked
+	var any_unlocked: bool = false
+	for i in range(3):
+		if skill_sys.is_unlocked(i):
+			any_unlocked = true
+			break
+
+	if not any_unlocked:
+		return
+
+	# Create skill bar on first use
+	if not _skill_bar_created:
+		_create_skill_hud()
+		_skill_bar_created = true
+
 	for i in range(_skill_slots.size()):
 		var slot: Dictionary = _skill_slots[i]
 		var unlocked: bool = skill_sys.is_unlocked(i)
 		var ratio: float = skill_sys.get_cooldown_ratio(i)
 
+		slot["panel"].visible = unlocked
 		if not unlocked:
-			slot["panel"].visible = false
 			continue
-		slot["panel"].visible = true
 		if ratio > 0:
 			slot["cd_overlay"].size.y = 56.0 * ratio
 			slot["cd_overlay"].color = Color(0, 0, 0, 0.5)
@@ -218,7 +233,8 @@ func _create_item_hotbar() -> void:
 	var container := HBoxContainer.new()
 	container.name = "ItemBar"
 	container.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	container.position = Vector2(200, -70)
+	container.position = Vector2(10, -70)  # same position as skill bar, shows when skills hidden
+	container.visible = false
 	container.add_theme_constant_override("separation", 6)
 	add_child(container)
 
@@ -268,6 +284,23 @@ func _update_item_hotbar(gm: Node) -> void:
 	if not "run_inventory" in gm:
 		return
 	var inv: Array = gm.run_inventory
+
+	if inv.size() == 0:
+		if _item_bar_created:
+			var item_bar := get_node_or_null("ItemBar")
+			if item_bar:
+				item_bar.visible = false
+		return
+
+	# Create item bar on first use
+	if not _item_bar_created:
+		_create_item_hotbar()
+		_item_bar_created = true
+
+	var item_bar := get_node_or_null("ItemBar")
+	if item_bar:
+		item_bar.visible = true
+
 	for i in range(_item_slots.size()):
 		var slot: Dictionary = _item_slots[i]
 		if i < inv.size():

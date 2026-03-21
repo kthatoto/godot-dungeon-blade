@@ -93,12 +93,17 @@ func _initialize() -> void:
 	room_label.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(room_label)
 
-	# --- Bottom-right: Gold counter ---
+	# --- Top-right: Gold counter ---
 	var gold_panel := PanelContainer.new()
 	gold_panel.name = "GoldPanel"
-	gold_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	gold_panel.position = Vector2(-130, -50)
-	gold_panel.size = Vector2(120, 40)
+	gold_panel.anchor_left = 1.0
+	gold_panel.anchor_top = 0.0
+	gold_panel.anchor_right = 1.0
+	gold_panel.anchor_bottom = 0.0
+	gold_panel.offset_left = -140
+	gold_panel.offset_top = 10
+	gold_panel.offset_right = -10
+	gold_panel.offset_bottom = 50
 	var gold_style := StyleBoxFlat.new()
 	gold_style.bg_color = Color(0.05, 0.05, 0.1, 0.8)
 	gold_style.border_color = Color(0.6, 0.5, 0.2)
