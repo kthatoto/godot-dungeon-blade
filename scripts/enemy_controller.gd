@@ -33,9 +33,9 @@ func _ready() -> void:
 	# Connect hurtbox
 	$HurtBox.area_entered.connect(_on_hurt)
 
-	# Register with game manager
+	# Register with game manager (only for fixed 3 rooms; endless mode handles its own registration)
 	var gm = _get_game_manager()
-	if gm:
+	if gm and not gm.endless_mode:
 		var room_idx: int = _get_room_index()
 		gm.register_enemy(room_idx)
 		died.connect(gm._on_enemy_died)
@@ -127,6 +127,13 @@ func _get_game_manager() -> Node:
 		if node.name == "GameManager":
 			return node
 	return null
+
+func apply_depth_scaling(depth: int) -> void:
+	max_hp = int(50 * (1.0 + depth * 0.15))
+	hp = max_hp
+	contact_damage = int(10 * (1.0 + depth * 0.1))
+	gold_value = int(10 * (1.0 + depth * 0.1))
+	speed = 80.0 + depth * 5.0
 
 func _get_room_index() -> int:
 	var x: float = global_position.x

@@ -24,8 +24,12 @@ var _invincible_timer: float = 0.0
 var _damage_cooldown: float = 0.0
 var _regen_timer: float = 0.0
 var _regen_accumulator: float = 0.0
+var _dash_speed: float = 0.0
+var _dash_timer: float = 0.0
+var _dash_dir: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
+	_apply_upgrades()
 	hp = max_hp
 	add_to_group("player")
 	# Bobbing idle animation via tween
@@ -43,6 +47,11 @@ func _ready() -> void:
 		camera.position_smoothing_enabled = true
 		camera.position_smoothing_speed = 8.0
 		add_child(camera)
+	# Add SkillSystem
+	var skill_sys := Node.new()
+	skill_sys.name = "SkillSystem"
+	skill_sys.set_script(load("res://scripts/skill_system.gd"))
+	add_child(skill_sys)
 
 func _start_idle_bob() -> void:
 	var tween := create_tween()
@@ -67,6 +76,15 @@ func _physics_process(delta: float) -> void:
 	# Damage cooldown
 	if _damage_cooldown > 0:
 		_damage_cooldown -= delta
+
+	# Dash movement override
+	if _dash_timer > 0:
+		_dash_timer -= delta
+		velocity = _dash_dir * _dash_speed
+		move_and_slide()
+		if _dash_timer <= 0:
+			sprite.modulate = Color.WHITE
+		return
 
 	# Movement
 	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -183,9 +201,59 @@ func _die() -> void:
 	if gm:
 		gm.player_died()
 
+## --- Skill actions ---
+
+func perform_dash() -> void:
+	if is_dead:
+		return
+	_dash_dir = facing if facing.length() > 0.1 else Vector2.DOWN
+	_dash_speed = 600.0
+	_dash_timer = 0.15
+	_invincible_timer = 0.2  # brief invincibility during dash
+	# Visual: blue-white flash
+	sprite.modulate = Color(0.5, 0.7, 1.0, 0.7)
+
+func perform_fireball() -> void:
+	if is_dead:
+		return
+	var fireball_scene := load("res://scenes/fireball.tscn") as PackedScene
+	if fireball_scene == null:
+		return
+	var fireball := fireball_scene.instantiate()
+	fireball.global_position = global_position + facing * 30.0
+	fireball.direction = facing if facing.length() > 0.1 else Vector2.DOWN
+	fireball.damage = attack_damage * 2
+	get_tree().current_scene.add_child(fireball)
+
+func perform_heal() -> void:
+	if is_dead:
+		return
+	var heal_amount := int(max_hp * 0.3)
+	hp = mini(hp + heal_amount, max_hp)
+	# Visual: green flash
+	var tween := create_tween()
+	tween.tween_property(sprite, ^"modulate", Color(0.3, 1.0, 0.3), 0.1)
+	tween.tween_property(sprite, ^"modulate", Color.WHITE, 0.3)
+	# Scale pulse
+	var tween2 := create_tween()
+	tween2.tween_property(sprite, ^"scale", Vector2(2.3, 2.3), 0.1)
+	tween2.tween_property(sprite, ^"scale", Vector2(2.0, 2.0), 0.2)
+
+func _apply_upgrades() -> void:
+	var sm_node := _get_autoload("SaveManager")
+	if sm_node == null:
+		return
+	max_hp = 100 + sm_node.get_upgrade_level("max_hp") * 20
+	attack_damage = 25 + sm_node.get_upgrade_level("attack_damage") * 5
+	speed = 200.0 + sm_node.get_upgrade_level("speed") * 20.0
+	regen_rate = 5.0 + sm_node.get_upgrade_level("regen_rate") * 2.0
+
 func _get_game_manager() -> Node:
+	return _get_autoload("GameManager")
+
+func _get_autoload(autoload_name: String) -> Node:
 	var root_children := get_tree().root.get_children()
 	for node in root_children:
-		if node.name == "GameManager":
+		if node.name == autoload_name:
 			return node
 	return null

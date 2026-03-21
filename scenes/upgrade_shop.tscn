@@ -1,0 +1,359 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/upgrade_shop_controller.gd" id="1_v8ny2"]
+
+[node name="UpgradeShop" type="Control" unique_id=1724864466]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_v8ny2")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1748234181]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.03, 0.02, 0.05, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=828175054]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 200
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 200
+theme_override_constants/margin_bottom = 40
+
+[node name="MainVBox" type="VBoxContainer" parent="Margin" unique_id=1636307272]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Margin/MainVBox" unique_id=1138120808]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(0.9, 0.75, 0.2, 1)
+text = "UPGRADE SHOP"
+horizontal_alignment = 1
+
+[node name="GoldRow" type="HBoxContainer" parent="Margin/MainVBox" unique_id=1318916165]
+layout_mode = 2
+alignment = 1
+
+[node name="@Label@2" type="Label" parent="Margin/MainVBox/GoldRow" unique_id=676339453]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.9, 0.75, 0.2, 1)
+text = "Gold: "
+
+[node name="GoldValue" type="Label" parent="Margin/MainVBox/GoldRow" unique_id=283491679]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+text = "0"
+
+[node name="@HSeparator@3" type="HSeparator" parent="Margin/MainVBox" unique_id=702540459]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="@Label@4" type="Label" parent="Margin/MainVBox" unique_id=459034417]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
+text = "STAT UPGRADES"
+horizontal_alignment = 1
+
+[node name="Upgrade_max_hp" type="HBoxContainer" parent="Margin/MainVBox" unique_id=735378973]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="@Label@5" type="Label" parent="Margin/MainVBox/Upgrade_max_hp" unique_id=1387029046]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.85, 0.7, 1)
+text = "Max HP"
+
+[node name="@Label@6" type="Label" parent="Margin/MainVBox/Upgrade_max_hp" unique_id=1141797677]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.6, 0.6, 0.65, 1)
+text = "+20 HP"
+
+[node name="Level_max_hp" type="Label" parent="Margin/MainVBox/Upgrade_max_hp" unique_id=1812168582]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+text = "Lv.0"
+horizontal_alignment = 1
+
+[node name="Cost_max_hp" type="Label" parent="Margin/MainVBox/Upgrade_max_hp" unique_id=906070738]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.75, 0.2, 1)
+text = "50G"
+horizontal_alignment = 2
+
+[node name="Buy_max_hp" type="Button" parent="Margin/MainVBox/Upgrade_max_hp" unique_id=1160707580]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "BUY"
+
+[node name="Upgrade_attack_damage" type="HBoxContainer" parent="Margin/MainVBox" unique_id=67731057]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="@Label@7" type="Label" parent="Margin/MainVBox/Upgrade_attack_damage" unique_id=1594831406]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.85, 0.7, 1)
+text = "Attack"
+
+[node name="@Label@8" type="Label" parent="Margin/MainVBox/Upgrade_attack_damage" unique_id=516706324]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.6, 0.6, 0.65, 1)
+text = "+5 DMG"
+
+[node name="Level_attack_damage" type="Label" parent="Margin/MainVBox/Upgrade_attack_damage" unique_id=1570303195]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+text = "Lv.0"
+horizontal_alignment = 1
+
+[node name="Cost_attack_damage" type="Label" parent="Margin/MainVBox/Upgrade_attack_damage" unique_id=2141316762]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.75, 0.2, 1)
+text = "50G"
+horizontal_alignment = 2
+
+[node name="Buy_attack_damage" type="Button" parent="Margin/MainVBox/Upgrade_attack_damage" unique_id=494787031]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "BUY"
+
+[node name="Upgrade_speed" type="HBoxContainer" parent="Margin/MainVBox" unique_id=1640379108]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="@Label@9" type="Label" parent="Margin/MainVBox/Upgrade_speed" unique_id=825501013]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.85, 0.7, 1)
+text = "Speed"
+
+[node name="@Label@10" type="Label" parent="Margin/MainVBox/Upgrade_speed" unique_id=1103383879]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.6, 0.6, 0.65, 1)
+text = "+20 SPD"
+
+[node name="Level_speed" type="Label" parent="Margin/MainVBox/Upgrade_speed" unique_id=321661782]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+text = "Lv.0"
+horizontal_alignment = 1
+
+[node name="Cost_speed" type="Label" parent="Margin/MainVBox/Upgrade_speed" unique_id=2012429264]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.75, 0.2, 1)
+text = "50G"
+horizontal_alignment = 2
+
+[node name="Buy_speed" type="Button" parent="Margin/MainVBox/Upgrade_speed" unique_id=1696236399]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "BUY"
+
+[node name="Upgrade_regen_rate" type="HBoxContainer" parent="Margin/MainVBox" unique_id=1274712261]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="@Label@11" type="Label" parent="Margin/MainVBox/Upgrade_regen_rate" unique_id=163707071]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.85, 0.7, 1)
+text = "HP Regen"
+
+[node name="@Label@12" type="Label" parent="Margin/MainVBox/Upgrade_regen_rate" unique_id=94711493]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.6, 0.6, 0.65, 1)
+text = "+2 HP/s"
+
+[node name="Level_regen_rate" type="Label" parent="Margin/MainVBox/Upgrade_regen_rate" unique_id=738503862]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+text = "Lv.0"
+horizontal_alignment = 1
+
+[node name="Cost_regen_rate" type="Label" parent="Margin/MainVBox/Upgrade_regen_rate" unique_id=1698697915]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.75, 0.2, 1)
+text = "50G"
+horizontal_alignment = 2
+
+[node name="Buy_regen_rate" type="Button" parent="Margin/MainVBox/Upgrade_regen_rate" unique_id=1429119377]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "BUY"
+
+[node name="@HSeparator@13" type="HSeparator" parent="Margin/MainVBox" unique_id=195815891]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="@Label@14" type="Label" parent="Margin/MainVBox" unique_id=66974380]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
+text = "SKILLS"
+horizontal_alignment = 1
+
+[node name="Skill_dash" type="HBoxContainer" parent="Margin/MainVBox" unique_id=733587910]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="@Label@15" type="Label" parent="Margin/MainVBox/Skill_dash" unique_id=576994737]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.85, 0.7, 1)
+text = "Dash (Q)"
+
+[node name="@Label@16" type="Label" parent="Margin/MainVBox/Skill_dash" unique_id=2064092496]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.6, 0.6, 0.65, 1)
+text = "Quick dodge, 3s CD"
+
+[node name="@Label@17" type="Label" parent="Margin/MainVBox/Skill_dash" unique_id=1623148391]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.75, 0.2, 1)
+text = "100G"
+horizontal_alignment = 2
+
+[node name="Status_dash" type="Label" parent="Margin/MainVBox/Skill_dash" unique_id=1121448575]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+
+[node name="BuySkill_dash" type="Button" parent="Margin/MainVBox/Skill_dash" unique_id=1299887505]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "BUY"
+
+[node name="Skill_fireball" type="HBoxContainer" parent="Margin/MainVBox" unique_id=57160954]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="@Label@18" type="Label" parent="Margin/MainVBox/Skill_fireball" unique_id=280748628]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.85, 0.7, 1)
+text = "Fireball (E)"
+
+[node name="@Label@19" type="Label" parent="Margin/MainVBox/Skill_fireball" unique_id=417139566]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.6, 0.6, 0.65, 1)
+text = "Ranged attack, 5s CD"
+
+[node name="@Label@20" type="Label" parent="Margin/MainVBox/Skill_fireball" unique_id=1210172920]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.75, 0.2, 1)
+text = "200G"
+horizontal_alignment = 2
+
+[node name="Status_fireball" type="Label" parent="Margin/MainVBox/Skill_fireball" unique_id=1164465085]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+
+[node name="BuySkill_fireball" type="Button" parent="Margin/MainVBox/Skill_fireball" unique_id=1048172579]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "BUY"
+
+[node name="Skill_heal" type="HBoxContainer" parent="Margin/MainVBox" unique_id=1167490223]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="@Label@21" type="Label" parent="Margin/MainVBox/Skill_heal" unique_id=1736567636]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.85, 0.7, 1)
+text = "Heal (R)"
+
+[node name="@Label@22" type="Label" parent="Margin/MainVBox/Skill_heal" unique_id=1259059747]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.6, 0.6, 0.65, 1)
+text = "Restore 30% HP, 10s CD"
+
+[node name="@Label@23" type="Label" parent="Margin/MainVBox/Skill_heal" unique_id=1822646436]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.75, 0.2, 1)
+text = "150G"
+horizontal_alignment = 2
+
+[node name="Status_heal" type="Label" parent="Margin/MainVBox/Skill_heal" unique_id=1911785066]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+
+[node name="BuySkill_heal" type="Button" parent="Margin/MainVBox/Skill_heal" unique_id=1929266781]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "BUY"
+
+[node name="@Control@24" type="Control" parent="Margin/MainVBox" unique_id=570860229]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContinueButton" type="Button" parent="Margin/MainVBox" unique_id=1689133924]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 20
+text = "CONTINUE"
