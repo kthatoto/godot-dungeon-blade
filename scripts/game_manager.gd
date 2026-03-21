@@ -49,6 +49,16 @@ func player_died() -> void:
 		return
 	is_game_over = true
 	game_over.emit(false)
+	# Retry after 1 second
+	get_tree().create_timer(1.0).timeout.connect(_retry)
+
+func _retry() -> void:
+	is_game_over = false
+	enemies_per_room = [0, 0, 0]
+	gold = 0
+	current_room = 0
+	player_ref = null
+	get_tree().reload_current_scene()
 
 func update_current_room() -> void:
 	if player_ref == null:
