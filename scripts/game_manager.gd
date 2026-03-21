@@ -67,10 +67,12 @@ func _get_room_from_pos(x: float) -> int:
 		return 2
 
 func _on_door_opened(room_index: int) -> void:
-	# Remove door blocker for this room
-	var blockers := get_tree().get_nodes_in_group("door_blocker_%d" % room_index)
-	for blocker in blockers:
-		# Fade out and remove
+	# Remove door blocker for this room (find by node name, not group)
+	var main = get_tree().current_scene
+	if main == null:
+		return
+	var blocker = main.get_node_or_null("DoorBlocker_%d" % room_index)
+	if blocker:
 		var visual = blocker.get_node_or_null("Visual")
 		if visual:
 			var tween := create_tween()
