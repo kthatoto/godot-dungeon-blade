@@ -107,22 +107,61 @@ func _add_building(parent: Node2D, bname: String, pos: Vector2, color: Color, di
 	shape.shape = rect
 	building.add_child(shape)
 
-	# Visual
+	# Outer border
+	var border := ColorRect.new()
+	border.name = "Border"
+	border.color = Color(color.r * 0.5, color.g * 0.5, color.b * 0.5, 0.9)
+	border.size = Vector2(130, 110)
+	border.position = Vector2(-65, -55)
+	border.z_index = -1
+	building.add_child(border)
+
+	# Main wall body using wall texture tiles
+	var wall_tex: Texture2D = load("res://assets/img/wall_tile.png")
+	for tx in range(4):
+		for ty in range(3):
+			var s := Sprite2D.new()
+			s.texture = wall_tex
+			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			s.position = Vector2(-44 + tx * 32, -34 + ty * 32)
+			s.modulate = color * 1.3
+			building.add_child(s)
+
+	# Color overlay for distinction
 	var visual := ColorRect.new()
 	visual.name = "Visual"
-	visual.color = color
+	visual.color = Color(color.r, color.g, color.b, 0.3)
 	visual.size = Vector2(120, 100)
 	visual.position = Vector2(-60, -50)
 	building.add_child(visual)
 
-	# Border highlight
-	var border := ColorRect.new()
-	border.name = "Border"
-	border.color = Color(color.r + 0.15, color.g + 0.15, color.b + 0.15, 0.5)
-	border.size = Vector2(124, 104)
-	border.position = Vector2(-62, -52)
-	border.z_index = -1
-	building.add_child(border)
+	# Roof accent line
+	var roof := ColorRect.new()
+	roof.name = "Roof"
+	roof.color = Color(color.r * 1.5, color.g * 1.5, color.b * 1.5, 0.8)
+	roof.size = Vector2(120, 6)
+	roof.position = Vector2(-60, -50)
+	building.add_child(roof)
+
+	# Icon symbol
+	var icon := Label.new()
+	icon.name = "Icon"
+	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	icon.add_theme_font_size_override("font_size", 28)
+	icon.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8, 0.9))
+	icon.position = Vector2(-20, -30)
+	icon.size = Vector2(40, 40)
+	match bname:
+		"Blacksmith":
+			icon.text = "X"  # anvil symbol
+		"PotionShop":
+			icon.text = "+"  # potion/heal symbol
+		"SkillTrainer":
+			icon.text = "*"  # magic symbol
+		"DungeonEntrance":
+			icon.text = ">"  # entrance arrow
+	building.add_child(icon)
 
 	# Name label
 	var label := Label.new()
@@ -131,8 +170,8 @@ func _add_building(parent: Node2D, bname: String, pos: Vector2, color: Color, di
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", 14)
 	label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
-	label.position = Vector2(-50, -68)
-	label.size = Vector2(100, 20)
+	label.position = Vector2(-60, 55)
+	label.size = Vector2(120, 20)
 	building.add_child(label)
 
 	parent.add_child(building)

@@ -52,4 +52,4 @@ static func try_drop(pos: Vector2, enemy_type: String, depth: int, scene: Node) 
 	var pickup := pickup_scene.instantiate()
 	pickup.global_position = pos
 	pickup.item_id = chosen_id
-	scene.add_child(pickup)
+	scene.call_deferred("add_child", pickup)

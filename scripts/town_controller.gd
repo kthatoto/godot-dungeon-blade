@@ -66,6 +66,11 @@ func _process(_delta: float) -> void:
 		if building_name in _prompt_labels:
 			_prompt_labels[building_name].visible = in_range
 
+	# Update gold display
+	var gold_label := get_node_or_null("CanvasLayer/TownHUD/GoldDisplay")
+	if gold_label:
+		gold_label.text = "Gold: %d" % SaveManager.get_gold()
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _active_shop != "":
 		if event.is_action_pressed("ui_cancel"):

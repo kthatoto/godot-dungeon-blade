@@ -218,8 +218,8 @@ func _update_skill_hud(skill_sys: Node) -> void:
 func _create_item_hotbar() -> void:
 	var container := HBoxContainer.new()
 	container.name = "ItemBar"
-	container.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	container.position = Vector2(-230, -70)
+	container.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	container.position = Vector2(200, -70)
 	container.add_theme_constant_override("separation", 6)
 	add_child(container)
 
