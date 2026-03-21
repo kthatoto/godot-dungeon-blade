@@ -10,13 +10,13 @@ Built with [Godot Engine 4.6](https://godotengine.org/) and [godogen](https://gi
 
 ## Screenshots
 
-| Room 1 - Skeleton Battle | Boss Fight |
+| Room 1 | Room 2 |
 |:---:|:---:|
-| ![Room 1](docs/images/gameplay_room1.png) | ![Boss](docs/images/gameplay_boss.png) |
+| ![Room 1](docs/images/gameplay_room1.png) | ![Room 2](docs/images/gameplay_room2.png) |
 
-| Room 2 - Skeleton Swarm | Boss Battle |
+| Boss Room | Boss Fight |
 |:---:|:---:|
-| ![Room 2](docs/images/gameplay_room2.png) | ![Boss Battle](docs/images/gameplay_boss_fight.png) |
+| ![Boss Room](docs/images/gameplay_boss.png) | ![Boss Fight](docs/images/gameplay_boss_fight.png) |
 
 ## How to Play
 
