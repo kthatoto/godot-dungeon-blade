@@ -2,7 +2,21 @@
 
 Dark fantasy pixel art top-down action game. Fight through skeleton-filled dungeon rooms with your sword and defeat the boss.
 
-![Gameplay - Room 1](docs/images/gameplay_room1.png)
+Built with [Godot Engine 4.6](https://godotengine.org/) and [godogen](https://github.com/htdt/godogen) (AI game generation pipeline).
+
+## Gameplay
+
+![Gameplay](docs/images/gameplay.gif)
+
+## Screenshots
+
+| Room 1 - Skeleton Battle | Boss Fight |
+|:---:|:---:|
+| ![Room 1](docs/images/gameplay_room1.png) | ![Boss](docs/images/gameplay_boss.png) |
+
+| Combat Action | Victory |
+|:---:|:---:|
+| ![Action](docs/images/gameplay_room1_action.png) | ![Victory](docs/images/gameplay_victory.png) |
 
 ## How to Play
 
@@ -30,8 +44,6 @@ Clear 3 dungeon rooms to win:
 
 ## Boss Fight
 
-![Boss Fight](docs/images/gameplay_boss.png)
-
 The boss has 300 HP, a charge attack, and an area slam. Watch for telegraphs and dodge!
 
 ## Running
@@ -40,10 +52,10 @@ Requires [Godot 4.6+](https://godotengine.org/).
 
 ```bash
 # Open in Godot editor
-/Applications/Godot.app/Contents/MacOS/Godot --path .
+godot --path .
 
 # Or run directly
-/Applications/Godot.app/Contents/MacOS/Godot --path . --quit-after 0
+godot --path . --quit-after 0
 ```
 
 Press F5 or the Play button in the editor to start.
