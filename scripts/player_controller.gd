@@ -9,6 +9,8 @@ signal attacked
 @export var attack_damage: int = 25
 @export var knockback_force: float = 150.0
 @export var invincibility_time: float = 0.5
+@export var regen_rate: float = 5.0  # HP per second when idle
+@export var regen_delay: float = 3.0  # seconds of no damage before regen starts
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var sword_hitbox: Area2D = $SwordHitbox
@@ -20,6 +22,8 @@ var is_dead: bool = false
 var _attack_timer: float = 0.0
 var _invincible_timer: float = 0.0
 var _damage_cooldown: float = 0.0
+var _regen_timer: float = 0.0
+var _regen_accumulator: float = 0.0
 
 func _ready() -> void:
 	hp = max_hp
@@ -32,6 +36,13 @@ func _ready() -> void:
 	var gm = _get_game_manager()
 	if gm:
 		gm.player_ref = self
+	# Add Camera2D at runtime (not saved in scene due to instantiation ownership)
+	if not get_node_or_null("Camera2D"):
+		var camera := Camera2D.new()
+		camera.name = "Camera2D"
+		camera.position_smoothing_enabled = true
+		camera.position_smoothing_speed = 8.0
+		add_child(camera)
 
 func _start_idle_bob() -> void:
 	var tween := create_tween()
@@ -87,6 +98,19 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("attack") and not is_attacking:
 		_do_attack()
 
+	# HP regen when idle (not moving, not attacking)
+	if input_dir.length() < 0.1 and not is_attacking and hp < max_hp and hp > 0:
+		_regen_timer += delta
+		if _regen_timer >= regen_delay:
+			_regen_accumulator += regen_rate * delta
+			if _regen_accumulator >= 1.0:
+				var heal := int(_regen_accumulator)
+				hp = mini(hp + heal, max_hp)
+				_regen_accumulator -= heal
+	else:
+		_regen_timer = 0.0
+		_regen_accumulator = 0.0
+
 func _do_attack() -> void:
 	is_attacking = true
 	_attack_timer = 0.3
@@ -136,6 +160,8 @@ func take_damage(amount: int) -> void:
 		return
 	hp -= amount
 	_invincible_timer = invincibility_time
+	_regen_timer = 0.0
+	_regen_accumulator = 0.0
 	# Flash red
 	var tween := create_tween()
 	tween.tween_property(sprite, ^"modulate", Color(1.0, 0.3, 0.3), 0.05)
