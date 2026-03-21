@@ -27,7 +27,7 @@
 
 ## 2. Core Game Loop
 - **Depends on:** 1
-- **Status:** pending
+- **Status:** done
 - **Targets:** scripts/player_controller.gd, scripts/enemy_controller.gd, scripts/boss_controller.gd, scripts/game_manager.gd, scripts/hud_controller.gd, scenes/main.tscn
 - **Goal:** Implement all gameplay — movement, combat, enemy AI, room transitions, boss fight, win/lose conditions.
 - **Requirements:**

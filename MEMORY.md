@@ -29,3 +29,30 @@
 - Rooms are offset by 1280px horizontally (viewport width)
 - HUD is on CanvasLayer (layer 10) so it doesn't move with camera
 - HUD polls player/GameManager state in `_process()` rather than using signals (simpler for visual-only task)
+
+## Task 2: Core Game Loop
+
+### What worked
+- Player `add_to_group("player")` + enemy `add_to_group("enemies")` for runtime entity discovery
+- `get_slide_collision_count()` + `get_slide_collision()` for contact damage detection on CharacterBody2D
+- Invincibility timer with sprite flicker (`modulate.a` alternating) prevents damage spam on contact
+- GameManager autoload with `door_opened` signal + `_on_door_opened()` callback to remove door blockers at runtime
+- Door blockers as StaticBody2D with groups (`door_blocker_0`, `door_blocker_1`) for easy lookup via `get_nodes_in_group()`
+- Boss state machine: idle -> chase -> telegraph_charge/telegraph_slam -> charge/slam -> cooldown cycle
+- Visual telegraphs (color flash before attacks) give player reaction time
+- Enemy `_get_room_index()` from `global_position.x` to determine which room they belong to
+- HUD game-over overlay with tween fade-in: ColorRect alpha + Label color animation
+
+### What failed / gotchas
+- `:=` type inference fails on `(parent.global_position - global_position).normalized()` when `parent` comes from `area.get_parent()` (returns Node, not Node2D). Must cast explicitly: `var body := parent as CharacterBody2D` then use `body.global_position`
+- `collider.contact_damage` via "in" check works but is untyped -- cast to the actual type for safety
+- Camera2D `make_current()` in `_initialize()` fails with "not in scene tree" error -- must be called in `_process()` or after `add_child()`
+- `set_deferred("disabled", ...)` required for collision shape changes inside physics callbacks
+
+### Architecture
+- Enemies self-register with GameManager via `register_enemy(room_idx)` and connect `died` signal in `_ready()`
+- Player connects `sword_hitbox.area_entered` to `_on_sword_hit` which calls `parent.take_damage()` on the hit entity
+- Enemy HurtBox (Area2D, layer 2, mask 8=player_attack) receives SwordHitbox (Area2D, layer 8=player_attack, mask 2=enemies) collisions
+- Contact damage: player checks `get_slide_collision()` in `_physics_process()` for enemies in group
+- GameManager tracks `enemies_per_room[3]` and emits `door_opened` when a room reaches 0
+- Boss uses _attack_cycle counter to alternate between charge and slam attacks

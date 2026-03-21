@@ -54,6 +54,12 @@ func _initialize() -> void:
 		if room_idx > 0:
 			_build_doorway(room, doorway_tex, false)  # left door (entrance)
 
+	# --- Door blockers (cleared when enemies die) ---
+	# Door blocker between Room 1 and Room 2 (at right side of Room 1)
+	_add_door_blocker(root, 0, Vector2(ROOM_W - WALL_THICKNESS * TILE / 2, 360))
+	# Door blocker between Room 2 and Room 3 (at right side of Room 2)
+	_add_door_blocker(root, 1, Vector2(ROOM_W * 2 - WALL_THICKNESS * TILE / 2, 360))
+
 	# --- Enemies in Room 1 ---
 	var enemy_scene: PackedScene = load("res://scenes/enemy.tscn")
 	var enemy_positions_r1 := [
@@ -133,6 +139,33 @@ func _initialize() -> void:
 
 	print("Saved: res://scenes/main.tscn")
 	quit(0)
+
+func _add_door_blocker(root: Node2D, room_index: int, pos: Vector2) -> void:
+	# A StaticBody2D that blocks the doorway until enemies in this room are cleared.
+	# The door_manager script will remove it when the room is cleared.
+	var blocker := StaticBody2D.new()
+	blocker.name = "DoorBlocker_%d" % room_index
+	blocker.collision_layer = 4  # walls
+	blocker.collision_mask = 0
+	blocker.position = pos
+	blocker.add_to_group("door_blocker_%d" % room_index)
+
+	var shape := CollisionShape2D.new()
+	shape.name = "Shape"
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(WALL_THICKNESS * TILE, 160)  # doorway height
+	shape.shape = rect
+	blocker.add_child(shape)
+
+	# Visual indicator: semi-transparent barrier
+	var visual := ColorRect.new()
+	visual.name = "Visual"
+	visual.color = Color(0.6, 0.3, 0.1, 0.5)
+	visual.size = Vector2(WALL_THICKNESS * TILE, 160)
+	visual.position = Vector2(-WALL_THICKNESS * TILE / 2, -80)
+	blocker.add_child(visual)
+
+	root.add_child(blocker)
 
 func _build_floor(room: Node2D, tex: Texture2D) -> void:
 	var floor_node := Node2D.new()

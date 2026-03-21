@@ -1,5 +1,5 @@
 extends CharacterBody2D
-## res://scripts/player_controller.gd — Player movement, facing, and attack visuals
+## res://scripts/player_controller.gd — Player movement, combat, HP, death
 
 signal died
 signal attacked
@@ -7,20 +7,31 @@ signal attacked
 @export var speed: float = 200.0
 @export var max_hp: int = 100
 @export var attack_damage: int = 25
+@export var knockback_force: float = 150.0
+@export var invincibility_time: float = 0.5
 
 @onready var sprite: Sprite2D = $Sprite2D
-@onready var anim: AnimationPlayer = $AnimationPlayer
 @onready var sword_hitbox: Area2D = $SwordHitbox
 
 var hp: int = 100
 var facing: Vector2 = Vector2.DOWN
 var is_attacking: bool = false
+var is_dead: bool = false
 var _attack_timer: float = 0.0
+var _invincible_timer: float = 0.0
+var _damage_cooldown: float = 0.0
 
 func _ready() -> void:
 	hp = max_hp
+	add_to_group("player")
 	# Bobbing idle animation via tween
 	_start_idle_bob()
+	# Connect sword hitbox
+	sword_hitbox.area_entered.connect(_on_sword_hit)
+	# Register with GameManager
+	var gm = _get_game_manager()
+	if gm:
+		gm.player_ref = self
 
 func _start_idle_bob() -> void:
 	var tween := create_tween()
@@ -29,9 +40,29 @@ func _start_idle_bob() -> void:
 	tween.tween_property(sprite, ^"position:y", 2.0, 0.6).set_trans(Tween.TRANS_SINE)
 
 func _physics_process(delta: float) -> void:
+	if is_dead:
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
+
+	# Invincibility timer
+	if _invincible_timer > 0:
+		_invincible_timer -= delta
+		# Flicker effect
+		sprite.modulate.a = 0.5 if fmod(_invincible_timer, 0.15) < 0.075 else 1.0
+		if _invincible_timer <= 0:
+			sprite.modulate = Color.WHITE
+
+	# Damage cooldown
+	if _damage_cooldown > 0:
+		_damage_cooldown -= delta
+
 	# Movement
 	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	velocity = input_dir * speed
+	if not is_attacking:
+		velocity = input_dir * speed
+	else:
+		velocity = velocity * 0.9  # slow down during attack
 
 	if input_dir.length() > 0.1:
 		facing = input_dir.normalized()
@@ -42,6 +73,9 @@ func _physics_process(delta: float) -> void:
 			sprite.flip_h = false
 
 	move_and_slide()
+
+	# Check for contact damage from enemies
+	_check_contact_damage()
 
 	# Attack
 	if _attack_timer > 0:
@@ -69,10 +103,39 @@ func _do_attack() -> void:
 	$SwordHitbox/CollisionShape2D.position = sword_offset
 
 func _on_sword_hit(area: Area2D) -> void:
-	pass
+	# Hit enemy or boss hurtbox
+	var parent := area.get_parent()
+	if parent and parent.has_method("take_damage"):
+		parent.take_damage(attack_damage)
+		# Knockback
+		if parent is CharacterBody2D:
+			var body := parent as CharacterBody2D
+			var kb_dir: Vector2 = (body.global_position - global_position).normalized()
+			body.velocity = kb_dir * knockback_force
+
+func _check_contact_damage() -> void:
+	if _invincible_timer > 0 or is_dead:
+		return
+	# Check collision with enemies via slide collisions
+	for i in range(get_slide_collision_count()):
+		var col := get_slide_collision(i)
+		var collider := col.get_collider()
+		if collider is CharacterBody2D and collider.is_in_group("enemies"):
+			var enemy_body := collider as CharacterBody2D
+			var dmg: int = 10
+			if "contact_damage" in enemy_body:
+				dmg = enemy_body.contact_damage
+			take_damage(dmg)
+			# Push player back
+			var push_dir: Vector2 = (global_position - enemy_body.global_position).normalized()
+			velocity = push_dir * 120.0
+			break
 
 func take_damage(amount: int) -> void:
+	if _invincible_timer > 0 or is_dead:
+		return
 	hp -= amount
+	_invincible_timer = invincibility_time
 	# Flash red
 	var tween := create_tween()
 	tween.tween_property(sprite, ^"modulate", Color(1.0, 0.3, 0.3), 0.05)
@@ -80,4 +143,23 @@ func take_damage(amount: int) -> void:
 
 	if hp <= 0:
 		hp = 0
-		died.emit()
+		_die()
+
+func _die() -> void:
+	is_dead = true
+	died.emit()
+	# Death visual
+	var tween := create_tween()
+	tween.tween_property(sprite, ^"modulate", Color(0.5, 0.0, 0.0, 0.5), 0.5)
+	tween.tween_property(sprite, ^"scale", Vector2(2.5, 0.5), 0.3)
+	# Notify game manager
+	var gm = _get_game_manager()
+	if gm:
+		gm.player_died()
+
+func _get_game_manager() -> Node:
+	var root_children := get_tree().root.get_children()
+	for node in root_children:
+		if node.name == "GameManager":
+			return node
+	return null
