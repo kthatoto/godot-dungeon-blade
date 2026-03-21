@@ -14,9 +14,9 @@ Built with [Godot Engine 4.6](https://godotengine.org/) and [godogen](https://gi
 |:---:|:---:|
 | ![Room 1](docs/images/gameplay_room1.png) | ![Boss](docs/images/gameplay_boss.png) |
 
-| Combat Action | Victory |
+| Room 2 - Skeleton Swarm | Boss Battle |
 |:---:|:---:|
-| ![Action](docs/images/gameplay_room1_action.png) | ![Victory](docs/images/gameplay_victory.png) |
+| ![Room 2](docs/images/gameplay_room2.png) | ![Boss Battle](docs/images/gameplay_boss_fight.png) |
 
 ## How to Play
 
