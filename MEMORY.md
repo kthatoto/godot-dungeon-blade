@@ -56,3 +56,20 @@
 - Contact damage: player checks `get_slide_collision()` in `_physics_process()` for enemies in group
 - GameManager tracks `enemies_per_room[3]` and emits `door_opened` when a room reaches 0
 - Boss uses _attack_cycle counter to alternate between charge and slam attacks
+
+## Task 3: Presentation Video
+
+### What worked
+- SceneTree script with frame-based phase system for cinematic sequencing
+- `--write-movie output.avi --fixed-fps 30 --quit-after 900` produces clean 30s AVI
+- ffmpeg conversion: `-c:v libx264 -pix_fmt yuv420p -crf 28 -preset slow -movflags +faststart` yields ~2.4MB MP4
+- Making player invincible (`max_hp = 99999`) prevents accidental death during presentation
+- `_kill_room_enemies()` with `take_damage(999)` to force room clears at scripted moments
+- `_release_all_movement()` helper that releases all input actions prevents stuck movement between phases
+- Camera `position_smoothing_enabled = true` with manual `lerp()` gives smooth follow
+- Teleporting player to next room entrance ensures progression even if movement timing is imprecise
+
+### What failed / gotchas
+- `make_current()` in `_initialize()` produces error since Camera2D not yet in scene tree — harmless, camera works from frame 1
+- `position_smoothing_enabled` must be toggled off during camera pan transitions, re-enabled for follow phases
+- On macOS, Godot runs natively with Metal — no GPU detection or xvfb needed

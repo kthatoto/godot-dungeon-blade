@@ -44,7 +44,7 @@
 
 ## 3. Presentation Video
 - **Depends on:** 1, 2
-- **Status:** pending
+- **Status:** done
 - **Targets:** test/presentation.gd, screenshots/presentation/gameplay.mp4
 - **Goal:** Create a ~30-second cinematic video showcasing the completed game.
 - **Requirements:**
