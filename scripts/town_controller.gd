@@ -6,10 +6,10 @@ var _prompt_labels: Dictionary = {}  # building_name -> Label
 var _player_ref: CharacterBody2D = null
 
 const BUILDINGS := {
-	"Blacksmith": { "interact": "blacksmith", "label": "Blacksmith", "range": 80.0 },
-	"PotionShop": { "interact": "potion", "label": "Potion Shop", "range": 80.0 },
-	"SkillTrainer": { "interact": "trainer", "label": "Skill Trainer", "range": 80.0 },
-	"DungeonEntrance": { "interact": "dungeon", "label": "Dungeon Entrance", "range": 80.0 },
+	"Blacksmith": { "interact": "blacksmith", "label": "Blacksmith", "range": 130.0 },
+	"PotionShop": { "interact": "potion", "label": "Potion Shop", "range": 130.0 },
+	"SkillTrainer": { "interact": "trainer", "label": "Skill Trainer", "range": 130.0 },
+	"DungeonEntrance": { "interact": "dungeon", "label": "Dungeon Entrance", "range": 130.0 },
 }
 
 const BLACKSMITH_ITEMS := {
