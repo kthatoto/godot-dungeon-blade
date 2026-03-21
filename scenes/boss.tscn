@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/boss_controller.gd" id="1_dlmty"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_neq0i"]
+radius = 20.0
+height = 48.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_jncid"]
+size = Vector2(40, 48)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_qnbj4"]
+radius = 60.0
+
+[node name="Boss" type="CharacterBody2D" unique_id=623267930]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_dlmty")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1829404007]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1410626316]
+shape = SubResource("CapsuleShape2D_neq0i")
+
+[node name="HurtBox" type="Area2D" parent="." unique_id=1141999150]
+collision_layer = 2
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox" unique_id=2128394460]
+shape = SubResource("RectangleShape2D_jncid")
+
+[node name="AttackArea" type="Area2D" parent="." unique_id=5711916]
+collision_layer = 16
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=14058764]
+shape = SubResource("CircleShape2D_qnbj4")
+disabled = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1805385773]
