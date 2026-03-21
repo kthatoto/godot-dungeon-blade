@@ -6,23 +6,58 @@ const ROOM_H := 720
 const TILE := 32
 const WALL_THICKNESS := 2
 
+# --- Theme system ---
+const THEMES := {
+	"dungeon": {
+		"bg_color": Color(0.04, 0.03, 0.02),
+		"light_color": Color(1.0, 0.8, 0.4),
+		"wall_modulate": Color(1.0, 1.0, 1.0),
+		"floor_modulate": Color(1.0, 1.0, 1.0),
+	},
+	"cave": {
+		"bg_color": Color(0.02, 0.04, 0.02),
+		"light_color": Color(0.6, 0.9, 0.7),
+		"wall_modulate": Color(0.7, 0.9, 0.7),
+		"floor_modulate": Color(0.8, 0.9, 0.8),
+	},
+	"crypt": {
+		"bg_color": Color(0.03, 0.02, 0.05),
+		"light_color": Color(0.7, 0.5, 1.0),
+		"wall_modulate": Color(0.8, 0.7, 0.9),
+		"floor_modulate": Color(0.8, 0.75, 0.9),
+	},
+	"lava": {
+		"bg_color": Color(0.06, 0.02, 0.01),
+		"light_color": Color(1.0, 0.4, 0.1),
+		"wall_modulate": Color(1.0, 0.8, 0.7),
+		"floor_modulate": Color(1.0, 0.85, 0.75),
+	},
+}
+
+static func get_theme_for_depth(depth: int) -> String:
+	var themes := THEMES.keys()
+	return themes[(depth / 5) % themes.size()]
+
 static func generate_room(depth: int, offset_x: float, is_boss_room: bool) -> Node2D:
 	var room := Node2D.new()
 	room.name = "Room_depth_%d" % depth
 	room.position = Vector2(offset_x, 0)
 	room.z_index = -1  # render below player and enemies
 
+	var theme_name := get_theme_for_depth(depth)
+	var theme: Dictionary = THEMES[theme_name]
+
 	# Background
 	var bg := ColorRect.new()
 	bg.name = "Background"
-	bg.color = Color(0.04, 0.03, 0.02)
+	bg.color = theme["bg_color"]
 	bg.size = Vector2(ROOM_W, ROOM_H)
 	room.add_child(bg)
 
 	# Floor
-	_build_floor(room)
+	_build_floor(room, theme["floor_modulate"])
 	# Walls (with left and right doorways)
-	_build_walls(room, true, true)
+	_build_walls(room, true, true, theme["wall_modulate"])
 	# Torches
 	_build_torches(room)
 
@@ -34,16 +69,32 @@ static func spawn_enemies_for_room(room: Node2D, depth: int, is_boss_room: bool,
 	var boss_scene: PackedScene = load("res://scenes/boss.tscn")
 	var offset_x: float = room.position.x
 
+	# Check for optional enemy scenes
+	var has_archer: bool = ResourceLoader.exists("res://scenes/archer.tscn")
+	var has_bat: bool = ResourceLoader.exists("res://scenes/bat.tscn")
+	var has_necro: bool = ResourceLoader.exists("res://scenes/necromancer.tscn")
+
 	if is_boss_room:
-		# Boss + some adds
-		var boss := boss_scene.instantiate() as CharacterBody2D
-		boss.name = "Boss_d%d" % depth
-		boss.position = Vector2(offset_x + ROOM_W * 0.7, ROOM_H * 0.5)
-		boss.apply_depth_scaling(depth)
-		parent.add_child(boss)
-		enemies.append(boss)
-		# Add minions
-		var add_count := clampi(depth / 5, 1, 3)
+		# Boss type depends on depth
+		var boss: CharacterBody2D
+		if depth % 10 == 0 and has_necro:
+			var necro_scene: PackedScene = load("res://scenes/necromancer.tscn")
+			boss = necro_scene.instantiate() as CharacterBody2D
+			boss.name = "Necromancer_d%d" % depth
+			boss.position = Vector2(offset_x + ROOM_W * 0.7, ROOM_H * 0.5)
+			boss.apply_depth_scaling(depth)
+			parent.add_child(boss)
+			enemies.append(boss)
+		else:
+			boss = boss_scene.instantiate() as CharacterBody2D
+			boss.name = "Boss_d%d" % depth
+			boss.position = Vector2(offset_x + ROOM_W * 0.7, ROOM_H * 0.5)
+			boss.apply_depth_scaling(depth)
+			parent.add_child(boss)
+			enemies.append(boss)
+
+		# Add minions (1-2 for boss rooms)
+		var add_count := clampi(depth / 5, 1, 2)
 		for i in range(add_count):
 			var enemy := enemy_scene.instantiate() as CharacterBody2D
 			enemy.name = "Enemy_d%d_%d" % [depth, i]
@@ -55,22 +106,58 @@ static func spawn_enemies_for_room(room: Node2D, depth: int, is_boss_room: bool,
 			parent.add_child(enemy)
 			enemies.append(enemy)
 	else:
-		# Normal room: increasing enemy count
+		# Normal room: variety based on depth
 		var count := clampi(3 + depth / 2, 3, 8)
 		for i in range(count):
-			var enemy := enemy_scene.instantiate() as CharacterBody2D
-			enemy.name = "Enemy_d%d_%d" % [depth, i]
+			var enemy: CharacterBody2D
+			if depth <= 2:
+				# Early depths: mostly normal skeletons + 1 bat
+				if i == 0 and has_bat:
+					var bat_scene: PackedScene = load("res://scenes/bat.tscn")
+					enemy = bat_scene.instantiate() as CharacterBody2D
+					enemy.name = "Bat_d%d_%d" % [depth, i]
+					enemy.apply_depth_scaling(depth)
+				else:
+					enemy = enemy_scene.instantiate() as CharacterBody2D
+					enemy.name = "Enemy_d%d_%d" % [depth, i]
+					enemy.apply_depth_scaling(depth)
+			else:
+				# Depth 3+: weighted random variety
+				var roll := randf()
+				if roll < 0.3:
+					# 30% strong skeleton
+					enemy = enemy_scene.instantiate() as CharacterBody2D
+					enemy.name = "StrongEnemy_d%d_%d" % [depth, i]
+					enemy.apply_depth_scaling(depth)
+					enemy.configure_variant("strong")
+				elif roll < 0.5 and has_archer:
+					# 20% archer
+					var archer_scene: PackedScene = load("res://scenes/archer.tscn")
+					enemy = archer_scene.instantiate() as CharacterBody2D
+					enemy.name = "Archer_d%d_%d" % [depth, i]
+					enemy.apply_depth_scaling(depth)
+				elif roll < 0.7 and has_bat:
+					# 20% bat
+					var bat_scene: PackedScene = load("res://scenes/bat.tscn")
+					enemy = bat_scene.instantiate() as CharacterBody2D
+					enemy.name = "Bat_d%d_%d" % [depth, i]
+					enemy.apply_depth_scaling(depth)
+				else:
+					# 30% normal (or fallback if scenes missing)
+					enemy = enemy_scene.instantiate() as CharacterBody2D
+					enemy.name = "Enemy_d%d_%d" % [depth, i]
+					enemy.apply_depth_scaling(depth)
+
 			enemy.position = Vector2(
 				offset_x + randf_range(200, ROOM_W - 200),
 				randf_range(150, ROOM_H - 150)
 			)
-			enemy.apply_depth_scaling(depth)
 			parent.add_child(enemy)
 			enemies.append(enemy)
 
 	return enemies
 
-static func _build_floor(room: Node2D) -> void:
+static func _build_floor(room: Node2D, modulate_color: Color = Color.WHITE) -> void:
 	var floor_tex: Texture2D = load("res://assets/img/floor_tile.png")
 	var floor_node := Node2D.new()
 	floor_node.name = "Floor"
@@ -89,11 +176,12 @@ static func _build_floor(room: Node2D) -> void:
 			s.texture = floor_tex
 			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			s.position = Vector2(x + TILE / 2, y + TILE / 2)
+			s.modulate = modulate_color
 			floor_node.add_child(s)
 			y += TILE
 		x += TILE
 
-static func _build_walls(room: Node2D, has_left_door: bool, has_right_door: bool) -> void:
+static func _build_walls(room: Node2D, has_left_door: bool, has_right_door: bool, modulate_color: Color = Color.WHITE) -> void:
 	var wall_tex: Texture2D = load("res://assets/img/wall_tile.png")
 	var walls := Node2D.new()
 	walls.name = "Walls"
@@ -108,6 +196,7 @@ static func _build_walls(room: Node2D, has_left_door: bool, has_right_door: bool
 			s.texture = wall_tex
 			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			s.position = Vector2(x + TILE / 2, y + TILE / 2)
+			s.modulate = modulate_color
 			walls.add_child(s)
 			y += TILE
 		x += TILE
@@ -121,6 +210,7 @@ static func _build_walls(room: Node2D, has_left_door: bool, has_right_door: bool
 			s.texture = wall_tex
 			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			s.position = Vector2(x + TILE / 2, y + TILE / 2)
+			s.modulate = modulate_color
 			walls.add_child(s)
 			y += TILE
 		x += TILE
@@ -136,6 +226,7 @@ static func _build_walls(room: Node2D, has_left_door: bool, has_right_door: bool
 				s.texture = wall_tex
 				s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 				s.position = Vector2(wall_x + TILE / 2, y + TILE / 2)
+				s.modulate = modulate_color
 				walls.add_child(s)
 				wall_x += TILE
 		y += TILE
@@ -151,6 +242,7 @@ static func _build_walls(room: Node2D, has_left_door: bool, has_right_door: bool
 				s.texture = wall_tex
 				s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 				s.position = Vector2(wall_x + TILE / 2, y + TILE / 2)
+				s.modulate = modulate_color
 				walls.add_child(s)
 				wall_x += TILE
 		y += TILE
@@ -282,7 +374,7 @@ static func add_door_blocker(parent: Node2D, blocker_name: String, pos: Vector2)
 	parent.add_child(blocker)
 	return blocker
 
-static func add_torch_lights(parent: Node2D, offset_x: float) -> void:
+static func add_torch_lights(parent: Node2D, offset_x: float, light_color: Color = Color(1.0, 0.8, 0.4)) -> void:
 	var positions := [
 		Vector2(80, 80), Vector2(400, 80), Vector2(880, 80), Vector2(1200, 80),
 		Vector2(80, 640), Vector2(400, 640), Vector2(880, 640), Vector2(1200, 640),
@@ -292,7 +384,7 @@ static func add_torch_lights(parent: Node2D, offset_x: float) -> void:
 	for i in range(positions.size()):
 		var light := PointLight2D.new()
 		light.position = Vector2(positions[i].x + offset_x, positions[i].y)
-		light.color = Color(1.0, 0.8, 0.4)
+		light.color = light_color
 		var is_center: bool = i == positions.size() - 1
 		light.energy = 1.5 if is_center else 0.9
 		light.texture = _create_light_texture()

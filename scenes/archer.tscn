@@ -1,0 +1,34 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/archer_controller.gd" id="1_b0l3x"]
+[ext_resource type="Texture2D" path="res://assets/img/enemy.png" id="2_orquw"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cctdm"]
+radius = 16.0
+height = 44.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ejvcm"]
+size = Vector2(20, 24)
+
+[node name="Archer" type="CharacterBody2D" unique_id=1366809962]
+collision_layer = 2
+collision_mask = 5
+motion_mode = 1
+script = ExtResource("1_b0l3x")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=260129103]
+texture_filter = 1
+scale = Vector2(2, 2)
+texture = ExtResource("2_orquw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=9629782]
+shape = SubResource("CapsuleShape2D_cctdm")
+
+[node name="HurtBox" type="Area2D" parent="." unique_id=1131799824]
+collision_layer = 2
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox" unique_id=744902883]
+shape = SubResource("RectangleShape2D_ejvcm")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=949518778]

@@ -1,5 +1,7 @@
 extends Control
-## res://scripts/hud_controller.gd — HUD showing HP, room, gold, and death/victory screens
+## res://scripts/hud_controller.gd — HUD showing HP, room, gold, skills, and item hotbar
+
+const ItemDatabase = preload("res://scripts/item_database.gd")
 
 @onready var hp_bar: ProgressBar = $InfoPanel/VBox/HPRow/HPBar
 @onready var hp_value: Label = $InfoPanel/VBox/HPRow/HPValue
@@ -10,12 +12,14 @@ var _overlay: ColorRect = null
 var _message_label: Label = null
 var _game_ended: bool = false
 var _skill_slots: Array[Dictionary] = []  # { "panel", "key_label", "cd_overlay", "cd_label" }
+var _item_slots: Array[Dictionary] = []   # { "panel", "key_label", "name_label" }
 
 func _ready() -> void:
 	_update_hp(100, 100)
 	_update_room(0)
 	_update_gold(0)
 	_create_skill_hud()
+	_create_item_hotbar()
 	# Create overlay for death/victory (hidden initially)
 	_create_overlay()
 
@@ -61,6 +65,8 @@ func _process(_delta: float) -> void:
 				_show_game_over(false)
 			else:
 				_show_game_over(true)
+		# Update item hotbar
+		_update_item_hotbar(gm)
 
 	# Update skill cooldowns
 	if player:
@@ -208,6 +214,72 @@ func _update_skill_hud(skill_sys: Node) -> void:
 		else:
 			slot["cd_overlay"].size.y = 0
 			slot["cd_label"].text = ""
+
+func _create_item_hotbar() -> void:
+	var container := HBoxContainer.new()
+	container.name = "ItemBar"
+	container.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	container.position = Vector2(-230, -70)
+	container.add_theme_constant_override("separation", 6)
+	add_child(container)
+
+	for i in range(4):
+		var panel := PanelContainer.new()
+		panel.name = "ItemSlot_%d" % i
+		panel.custom_minimum_size = Vector2(52, 52)
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.08, 0.06, 0.04, 0.8)
+		style.border_color = Color(0.5, 0.4, 0.3, 0.6)
+		style.border_width_left = 1
+		style.border_width_right = 1
+		style.border_width_top = 1
+		style.border_width_bottom = 1
+		style.corner_radius_top_left = 3
+		style.corner_radius_top_right = 3
+		style.corner_radius_bottom_left = 3
+		style.corner_radius_bottom_right = 3
+		panel.add_theme_stylebox_override("panel", style)
+		container.add_child(panel)
+
+		var vbox := VBoxContainer.new()
+		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		panel.add_child(vbox)
+
+		var key_label := Label.new()
+		key_label.text = str(i + 1)
+		key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		key_label.add_theme_font_size_override("font_size", 14)
+		key_label.add_theme_color_override("font_color", Color(0.8, 0.7, 0.5))
+		vbox.add_child(key_label)
+
+		var name_label := Label.new()
+		name_label.text = ""
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.add_theme_font_size_override("font_size", 8)
+		name_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+		vbox.add_child(name_label)
+
+		_item_slots.append({
+			"panel": panel,
+			"key_label": key_label,
+			"name_label": name_label,
+		})
+
+func _update_item_hotbar(gm: Node) -> void:
+	if not "run_inventory" in gm:
+		return
+	var inv: Array = gm.run_inventory
+	for i in range(_item_slots.size()):
+		var slot: Dictionary = _item_slots[i]
+		if i < inv.size():
+			var item_id: String = inv[i]
+			var item_data: Dictionary = ItemDatabase.get_item(item_id)
+			slot["name_label"].text = item_data.get("name", item_id)
+			var color: Color = item_data.get("icon_color", Color.WHITE)
+			slot["key_label"].add_theme_color_override("font_color", color)
+		else:
+			slot["name_label"].text = ""
+			slot["key_label"].add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
 
 func _get_game_manager() -> Node:
 	var root_children := get_tree().root.get_children()

@@ -129,6 +129,13 @@ func _physics_process(delta: float) -> void:
 		_regen_timer = 0.0
 		_regen_accumulator = 0.0
 
+	# Item usage (keys 1-4)
+	for i in range(4):
+		if Input.is_action_just_pressed("item_%d" % (i + 1)):
+			var gm = _get_game_manager()
+			if gm:
+				gm.use_item(i, self)
+
 func _do_attack() -> void:
 	is_attacking = true
 	_attack_timer = 0.3
@@ -265,6 +272,16 @@ func perform_heal() -> void:
 	tween2.tween_property(sprite, ^"scale", Vector2(2.3, 2.3), 0.1)
 	tween2.tween_property(sprite, ^"scale", Vector2(2.0, 2.0), 0.2)
 
+func heal_percent(ratio: float) -> void:
+	if is_dead:
+		return
+	var heal_amount := int(max_hp * ratio)
+	hp = mini(hp + heal_amount, max_hp)
+	# Visual: green flash
+	var tween := create_tween()
+	tween.tween_property(sprite, ^"modulate", Color(0.3, 1.0, 0.5), 0.1)
+	tween.tween_property(sprite, ^"modulate", Color.WHITE, 0.3)
+
 func _apply_upgrades() -> void:
 	var sm_node := _get_autoload("SaveManager")
 	if sm_node == null:
@@ -273,6 +290,9 @@ func _apply_upgrades() -> void:
 	attack_damage = 25 + sm_node.get_upgrade_level("attack_damage") * 5
 	speed = 200.0 + sm_node.get_upgrade_level("speed") * 20.0
 	regen_rate = 5.0 + sm_node.get_upgrade_level("regen_rate") * 2.0
+	# Equipment bonuses
+	attack_damage += sm_node.get_weapon_bonus()
+	max_hp += sm_node.get_armor_bonus()
 
 func _get_game_manager() -> Node:
 	return _get_autoload("GameManager")

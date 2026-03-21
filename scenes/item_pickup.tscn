@@ -1,0 +1,29 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/item_pickup.gd" id="1_lgqak"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_yiukj"]
+radius = 20.0
+
+[node name="ItemPickup" type="Area2D" unique_id=659495854]
+collision_layer = 0
+monitorable = false
+script = ExtResource("1_lgqak")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1608135054]
+shape = SubResource("CircleShape2D_yiukj")
+
+[node name="Visual" type="ColorRect" parent="." unique_id=354873689]
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+
+[node name="NameLabel" type="Label" parent="." unique_id=527086572]
+offset_left = -40.0
+offset_top = -28.0
+offset_right = 40.0
+offset_bottom = -5.0
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(1, 1, 1, 0.9)
+horizontal_alignment = 1

@@ -1,6 +1,8 @@
 extends CharacterBody2D
 ## res://scripts/boss_controller.gd — Boss with chase, charge attack, and area slam
 
+const DropSystem = preload("res://scripts/drop_system.gd")
+
 signal died
 
 @export var speed: float = 100.0
@@ -218,6 +220,11 @@ func take_damage(amount: int) -> void:
 func _die() -> void:
 	is_dead = true
 	died.emit()
+	var depth: int = 0
+	var gm = _get_game_manager()
+	if gm:
+		depth = gm.dungeon_depth if gm.endless_mode else 2
+	DropSystem.try_drop(global_position, "boss", depth, get_tree().current_scene)
 	# Death animation
 	var tween := create_tween()
 	tween.tween_property(sprite, ^"modulate", Color(1.0, 0.0, 0.0, 0.3), 0.5)

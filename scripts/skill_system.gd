@@ -1,5 +1,5 @@
 extends Node
-## res://scripts/skill_system.gd — Manages active skills with cooldowns
+## res://scripts/skill_system.gd — Manages active skills with cooldowns and levels
 
 signal skill_used(slot_index: int, skill_id: String)
 signal cooldown_updated(slot_index: int, ratio: float)
@@ -10,6 +10,13 @@ const SKILL_DEFS := {
 	"heal":     { "cooldown": 10.0, "slot": 2 },
 }
 
+# Cooldown per level: level -> cooldown
+const COOLDOWN_BY_LEVEL := {
+	"dash":     {1: 3.0, 2: 2.0, 3: 2.0},
+	"fireball": {1: 5.0, 2: 5.0, 3: 5.0},
+	"heal":     {1: 10.0, 2: 10.0, 3: 7.0},
+}
+
 const SLOT_ACTIONS := ["skill_1", "skill_2", "skill_3"]
 const SLOT_IDS := ["dash", "fireball", "heal"]
 
@@ -18,12 +25,17 @@ var slots: Array[Dictionary] = []  # { "id", "cooldown_max", "cooldown_current",
 func _ready() -> void:
 	for i in range(3):
 		var skill_id: String = SLOT_IDS[i]
-		var def: Dictionary = SKILL_DEFS[skill_id]
+		var level: int = SaveManager.get_skill_level(skill_id)
+		var unlocked: bool = level > 0
+		var cd: float = SKILL_DEFS[skill_id]["cooldown"]
+		if unlocked and skill_id in COOLDOWN_BY_LEVEL:
+			var level_map: Dictionary = COOLDOWN_BY_LEVEL[skill_id]
+			cd = level_map.get(level, cd)
 		slots.append({
 			"id": skill_id,
-			"cooldown_max": def["cooldown"],
+			"cooldown_max": cd,
 			"cooldown_current": 0.0,
-			"unlocked": SaveManager.has_skill(skill_id),
+			"unlocked": unlocked,
 		})
 
 func _process(delta: float) -> void:

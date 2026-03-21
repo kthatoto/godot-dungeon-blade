@@ -1,6 +1,8 @@
 extends Node
 ## res://scripts/game_manager.gd — Global game state, room progression, win/lose
 
+const ItemDatabase = preload("res://scripts/item_database.gd")
+
 signal room_changed(room_index: int)
 signal game_over(won: bool)
 signal door_opened(room_index: int)
@@ -10,6 +12,7 @@ var run_gold: int = 0
 var enemies_per_room: Array[int] = [0, 0, 0]
 var is_game_over: bool = false
 var player_ref: CharacterBody2D = null
+var run_inventory: Array[String] = []
 
 # Endless mode
 var endless_mode: bool = false
@@ -102,7 +105,9 @@ func _generate_next_endless_room() -> void:
 		lights_node = Node2D.new()
 		lights_node.name = "TorchLights"
 		main.add_child(lights_node)
-	RoomGenerator.add_torch_lights(lights_node, _endless_current_offset_x)
+	var theme_name := RoomGenerator.get_theme_for_depth(dungeon_depth)
+	var theme: Dictionary = RoomGenerator.THEMES[theme_name]
+	RoomGenerator.add_torch_lights(lights_node, _endless_current_offset_x, theme["light_color"])
 
 	# Add darkness if not present
 	if main.get_node_or_null("Darkness") == null:
@@ -161,7 +166,29 @@ func _go_to_shop() -> void:
 	SaveManager.add_gold(run_gold)
 	SaveManager.save_game()
 	run_gold = 0
-	get_tree().change_scene_to_file("res://scenes/upgrade_shop.tscn")
+	get_tree().change_scene_to_file("res://scenes/town.tscn")
+
+func add_item_to_run(item_id: String) -> void:
+	run_inventory.append(item_id)
+
+func use_item(index: int, player: CharacterBody2D) -> void:
+	if index < 0 or index >= run_inventory.size():
+		return
+	var item_id: String = run_inventory[index]
+	var item_data: Dictionary = ItemDatabase.get_item(item_id)
+	if item_data.is_empty():
+		return
+	match item_id:
+		"health_potion":
+			if player.has_method("heal_percent"):
+				player.heal_percent(0.5)
+		"escape_scroll":
+			# End run, keep gold
+			_go_to_shop()
+			return
+		_:
+			return  # non-consumable items cannot be "used"
+	run_inventory.remove_at(index)
 
 func reset_for_new_run() -> void:
 	is_game_over = false
@@ -169,6 +196,7 @@ func reset_for_new_run() -> void:
 	run_gold = 0
 	current_room = 0
 	player_ref = null
+	run_inventory.clear()
 	endless_mode = false
 	dungeon_depth = 0
 	_endless_enemy_count = 0

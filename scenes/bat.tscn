@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bat_controller.gd" id="1_cnldk"]
+[ext_resource type="Texture2D" path="res://assets/img/enemy.png" id="2_48wkk"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ss3tx"]
+height = 24.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lv0ya"]
+size = Vector2(16, 20)
+
+[node name="Bat" type="CharacterBody2D" unique_id=525680113]
+collision_layer = 2
+collision_mask = 5
+motion_mode = 1
+script = ExtResource("1_cnldk")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1383457335]
+texture_filter = 1
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_48wkk")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2092502126]
+shape = SubResource("CapsuleShape2D_ss3tx")
+
+[node name="HurtBox" type="Area2D" parent="." unique_id=466230059]
+collision_layer = 2
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox" unique_id=1970555040]
+shape = SubResource("RectangleShape2D_lv0ya")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=674386386]

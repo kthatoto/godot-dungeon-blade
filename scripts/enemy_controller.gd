@@ -1,6 +1,8 @@
 extends CharacterBody2D
 ## res://scripts/enemy_controller.gd — Skeleton enemy with patrol, chase, and contact damage
 
+const DropSystem = preload("res://scripts/drop_system.gd")
+
 signal died(enemy: CharacterBody2D)
 
 @export var speed: float = 80.0
@@ -109,6 +111,11 @@ func take_damage(amount: int) -> void:
 func _die() -> void:
 	is_dead = true
 	died.emit(self)
+	var depth: int = 0
+	var gm = _get_game_manager()
+	if gm:
+		depth = gm.dungeon_depth if gm.endless_mode else _get_room_index()
+	DropSystem.try_drop(global_position, "skeleton", depth, get_tree().current_scene)
 	# Death animation
 	var tween := create_tween()
 	tween.tween_property(sprite, ^"modulate", Color(1.0, 0.3, 0.3, 0.3), 0.3)
@@ -134,6 +141,18 @@ func apply_depth_scaling(depth: int) -> void:
 	contact_damage = int(10 * (1.0 + depth * 0.1))
 	gold_value = int(10 * (1.0 + depth * 0.1))
 	speed = 80.0 + depth * 5.0
+
+func configure_variant(variant: String) -> void:
+	match variant:
+		"strong":
+			max_hp *= 2
+			hp = max_hp
+			contact_damage = int(contact_damage * 1.5)
+			gold_value = int(gold_value * 1.5)
+			speed *= 1.2
+			sprite.modulate = Color(1.4, 0.5, 0.5)
+		"normal":
+			pass
 
 func _get_room_index() -> int:
 	var x: float = global_position.x
