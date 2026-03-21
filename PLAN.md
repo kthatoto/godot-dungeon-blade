@@ -6,7 +6,7 @@
 
 ## 1. Visual Architecture
 - **Depends on:** (none)
-- **Status:** pending
+- **Status:** done
 - **Targets:** scenes/main.tscn, scenes/player.tscn, scenes/enemy.tscn, scenes/boss.tscn, scenes/hud.tscn, scripts/player_controller.gd, scripts/enemy_controller.gd, scripts/boss_controller.gd, project.godot
 - **Goal:** Build the complete visual foundation — dungeon rooms, player character, enemies, and boss all rendered at correct scale with animations, in the dark fantasy pixel art style from reference.png.
 - **Requirements:**

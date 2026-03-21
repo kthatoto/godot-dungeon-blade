@@ -1,28 +1,34 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/enemy_controller.gd" id="1_7p1mj"]
+[ext_resource type="Script" path="res://scripts/enemy_controller.gd" id="1_md0e3"]
+[ext_resource type="Texture2D" path="res://assets/img/enemy.png" id="2_4ra3w"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_md0e3"]
-height = 24.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_5uy6h"]
+radius = 16.0
+height = 44.0
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_4ra3w"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_c4w8v"]
 size = Vector2(20, 24)
 
-[node name="Enemy" type="CharacterBody2D" unique_id=1233873026]
+[node name="Enemy" type="CharacterBody2D" unique_id=1595308179]
 collision_layer = 2
 collision_mask = 5
-script = ExtResource("1_7p1mj")
+motion_mode = 1
+script = ExtResource("1_md0e3")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=851700226]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1871749699]
+texture_filter = 1
+scale = Vector2(2, 2)
+texture = ExtResource("2_4ra3w")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1672864768]
-shape = SubResource("CapsuleShape2D_md0e3")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1431204447]
+shape = SubResource("CapsuleShape2D_5uy6h")
 
-[node name="HurtBox" type="Area2D" parent="." unique_id=3972590]
+[node name="HurtBox" type="Area2D" parent="." unique_id=1185490109]
 collision_layer = 2
 collision_mask = 8
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox" unique_id=1161246765]
-shape = SubResource("RectangleShape2D_4ra3w")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox" unique_id=1456146082]
+shape = SubResource("RectangleShape2D_c4w8v")
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=543916067]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1644470281]

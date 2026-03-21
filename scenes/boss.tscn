@@ -1,39 +1,44 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/boss_controller.gd" id="1_dlmty"]
+[ext_resource type="Script" path="res://scripts/boss_controller.gd" id="1_neq0i"]
+[ext_resource type="Texture2D" path="res://assets/img/boss.png" id="2_jncid"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_neq0i"]
-radius = 20.0
-height = 48.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_qnbj4"]
+radius = 32.0
+height = 80.0
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_jncid"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_r3bxh"]
 size = Vector2(40, 48)
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_qnbj4"]
+[sub_resource type="CircleShape2D" id="CircleShape2D_wqpjq"]
 radius = 60.0
 
-[node name="Boss" type="CharacterBody2D" unique_id=623267930]
+[node name="Boss" type="CharacterBody2D" unique_id=800665010]
 collision_layer = 2
 collision_mask = 5
-script = ExtResource("1_dlmty")
+motion_mode = 1
+script = ExtResource("1_neq0i")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1829404007]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1072825902]
+texture_filter = 1
+scale = Vector2(2, 2)
+texture = ExtResource("2_jncid")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1410626316]
-shape = SubResource("CapsuleShape2D_neq0i")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2102258723]
+shape = SubResource("CapsuleShape2D_qnbj4")
 
-[node name="HurtBox" type="Area2D" parent="." unique_id=1141999150]
+[node name="HurtBox" type="Area2D" parent="." unique_id=661380781]
 collision_layer = 2
 collision_mask = 8
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox" unique_id=2128394460]
-shape = SubResource("RectangleShape2D_jncid")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox" unique_id=870078585]
+shape = SubResource("RectangleShape2D_r3bxh")
 
-[node name="AttackArea" type="Area2D" parent="." unique_id=5711916]
+[node name="AttackArea" type="Area2D" parent="." unique_id=115279273]
 collision_layer = 16
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=14058764]
-shape = SubResource("CircleShape2D_qnbj4")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=441705484]
+shape = SubResource("CircleShape2D_wqpjq")
 disabled = true
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1805385773]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1659990722]

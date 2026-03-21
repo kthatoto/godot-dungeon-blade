@@ -2,21 +2,27 @@ extends SceneTree
 ## Scene builder — run: timeout 60 godot --headless --script scenes/build_enemy.gd
 
 func _initialize() -> void:
+	print("Building enemy scene...")
+
 	var root := CharacterBody2D.new()
 	root.name = "Enemy"
 	root.set_script(load("res://scripts/enemy_controller.gd"))
 	root.collision_layer = 2  # enemies
 	root.collision_mask = 1 | 4  # player, walls
+	root.motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 
 	var sprite := Sprite2D.new()
 	sprite.name = "Sprite2D"
+	sprite.texture = load("res://assets/img/enemy.png")
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.scale = Vector2(2, 2)
 	root.add_child(sprite)
 
 	var collision := CollisionShape2D.new()
 	collision.name = "CollisionShape2D"
 	var shape := CapsuleShape2D.new()
-	shape.radius = 10.0
-	shape.height = 24.0
+	shape.radius = 16.0
+	shape.height = 44.0
 	collision.shape = shape
 	root.add_child(collision)
 

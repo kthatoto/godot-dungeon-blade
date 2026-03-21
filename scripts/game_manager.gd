@@ -1,5 +1,5 @@
 extends Node
-## res://scripts/game_manager.gd
+## res://scripts/game_manager.gd — Global game state
 
 signal room_changed(room_index: int)
 signal game_over(won: bool)
@@ -12,7 +12,10 @@ func _ready() -> void:
 	pass
 
 func _on_enemy_died(enemy: CharacterBody2D) -> void:
-	pass
+	enemies_alive -= 1
+	if enemy and "gold_value" in enemy:
+		gold += enemy.gold_value
 
 func _on_boss_died() -> void:
-	pass
+	gold += 100
+	game_over.emit(true)
