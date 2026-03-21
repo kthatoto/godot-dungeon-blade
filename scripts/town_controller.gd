@@ -30,6 +30,13 @@ const SKILLS := {
 	"heal":     { "cost": 150, "label": "Heal (R)",     "desc": "Restore 30% HP, 10s CD" },
 }
 
+const STAT_UPGRADES := {
+	"max_hp":        { "base_cost": 50, "label": "Max HP",   "desc": "+20 HP" },
+	"attack_damage": { "base_cost": 50, "label": "Attack",   "desc": "+5 DMG" },
+	"speed":         { "base_cost": 50, "label": "Speed",    "desc": "+20 SPD" },
+	"regen_rate":    { "base_cost": 50, "label": "HP Regen", "desc": "+2 HP/s" },
+}
+
 func _ready() -> void:
 	_setup_prompts()
 
@@ -259,10 +266,66 @@ func _build_potion_shop(vbox: VBoxContainer) -> void:
 		row.add_child(buy_btn)
 
 func _build_trainer_shop(vbox: VBoxContainer) -> void:
+	# --- Stat Upgrades ---
+	var stat_title := Label.new()
+	stat_title.text = "STAT UPGRADES"
+	stat_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	stat_title.add_theme_font_size_override("font_size", 20)
+	stat_title.add_theme_color_override("font_color", Color(0.9, 0.75, 0.2))
+	vbox.add_child(stat_title)
+
+	for key in STAT_UPGRADES:
+		var upgrade: Dictionary = STAT_UPGRADES[key]
+		var level: int = SaveManager.get_upgrade_level(key)
+		var cost: int = upgrade["base_cost"] * int(pow(2, level))
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		vbox.add_child(row)
+
+		var name_label := Label.new()
+		name_label.text = upgrade["label"]
+		name_label.custom_minimum_size = Vector2(100, 0)
+		name_label.add_theme_font_size_override("font_size", 15)
+		row.add_child(name_label)
+
+		var desc_label := Label.new()
+		desc_label.text = upgrade["desc"]
+		desc_label.custom_minimum_size = Vector2(80, 0)
+		desc_label.add_theme_font_size_override("font_size", 13)
+		desc_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
+		row.add_child(desc_label)
+
+		var lv_label := Label.new()
+		lv_label.text = "Lv.%d" % level
+		lv_label.custom_minimum_size = Vector2(50, 0)
+		lv_label.add_theme_font_size_override("font_size", 14)
+		lv_label.add_theme_color_override("font_color", Color(0.5, 0.8, 1.0))
+		row.add_child(lv_label)
+
+		var cost_label := Label.new()
+		cost_label.text = "%dG" % cost
+		cost_label.custom_minimum_size = Vector2(60, 0)
+		cost_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		cost_label.add_theme_font_size_override("font_size", 15)
+		cost_label.add_theme_color_override("font_color", Color(0.9, 0.75, 0.2))
+		row.add_child(cost_label)
+
+		var buy_btn := Button.new()
+		buy_btn.text = "BUY"
+		buy_btn.custom_minimum_size = Vector2(60, 26)
+		buy_btn.add_theme_font_size_override("font_size", 13)
+		buy_btn.disabled = SaveManager.get_gold() < cost
+		buy_btn.pressed.connect(_buy_stat_upgrade.bind(key))
+		row.add_child(buy_btn)
+
+	var sep := HSeparator.new()
+	vbox.add_child(sep)
+
+	# --- Skills ---
 	var title := Label.new()
-	title.text = "SKILL TRAINER"
+	title.text = "SKILLS"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", 20)
 	title.add_theme_color_override("font_color", Color(0.4, 0.6, 1.0))
 	vbox.add_child(title)
 
@@ -329,6 +392,15 @@ func _buy_potion_item(item_id: String) -> void:
 		# Rebuild overlay
 		_close_shop_overlay()
 		_open_shop_overlay("potion")
+
+func _buy_stat_upgrade(key: String) -> void:
+	var level: int = SaveManager.get_upgrade_level(key)
+	var cost: int = STAT_UPGRADES[key]["base_cost"] * int(pow(2, level))
+	if SaveManager.spend_gold(cost):
+		SaveManager.set_upgrade_level(key, level + 1)
+		SaveManager.save_game()
+		_close_shop_overlay()
+		_open_shop_overlay("trainer")
 
 func _buy_skill(skill_id: String) -> void:
 	var cost: int = SKILLS[skill_id]["cost"]
