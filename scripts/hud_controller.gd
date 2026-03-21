@@ -127,8 +127,13 @@ func _create_skill_hud() -> void:
 
 	var container := HBoxContainer.new()
 	container.name = "SkillBar"
-	container.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	container.position = Vector2(10, -70)
+	container.anchor_left = 0.0
+	container.anchor_top = 1.0
+	container.anchor_right = 0.0
+	container.anchor_bottom = 1.0
+	container.offset_left = 10
+	container.offset_top = -66
+	container.offset_bottom = -10
 	container.add_theme_constant_override("separation", 8)
 	add_child(container)
 
@@ -232,8 +237,13 @@ func _update_skill_hud(skill_sys: Node) -> void:
 func _create_item_hotbar() -> void:
 	var container := HBoxContainer.new()
 	container.name = "ItemBar"
-	container.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	container.position = Vector2(10, -70)  # same position as skill bar, shows when skills hidden
+	container.anchor_left = 0.0
+	container.anchor_top = 1.0
+	container.anchor_right = 0.0
+	container.anchor_bottom = 1.0
+	container.offset_left = 10
+	container.offset_top = -66
+	container.offset_bottom = -10
 	container.visible = false
 	container.add_theme_constant_override("separation", 6)
 	add_child(container)

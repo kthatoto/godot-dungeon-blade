@@ -124,19 +124,19 @@ func _open_shop_overlay(shop_type: String) -> void:
 	canvas.layer = 20
 	add_child(canvas)
 
-	# Dark background
+	# Dark background — viewport is always 1280x720
 	var bg := ColorRect.new()
 	bg.name = "ShopBG"
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.position = Vector2(0, 0)
+	bg.size = Vector2(1280, 720)
 	bg.color = Color(0.0, 0.0, 0.0, 0.7)
 	canvas.add_child(bg)
 
-	# Panel
+	# Panel — centered at viewport center
 	var panel := PanelContainer.new()
 	panel.name = "ShopPanel"
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.custom_minimum_size = Vector2(500, 400)
-	panel.position = Vector2(390, 160)
+	panel.position = Vector2(340, 80)
+	panel.size = Vector2(600, 560)
 	canvas.add_child(panel)
 
 	var vbox := VBoxContainer.new()
