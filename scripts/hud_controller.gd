@@ -53,7 +53,7 @@ func _process(_delta: float) -> void:
 		if "current_room" in gm:
 			_update_room(gm.current_room)
 		if "run_gold" in gm:
-			_update_gold(gm.run_gold)
+			_update_gold(SaveManager.get_gold() + gm.run_gold)
 		# Check game over
 		if not _game_ended and "is_game_over" in gm and gm.is_game_over:
 			_game_ended = true

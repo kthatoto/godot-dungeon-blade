@@ -10,6 +10,7 @@ static func generate_room(depth: int, offset_x: float, is_boss_room: bool) -> No
 	var room := Node2D.new()
 	room.name = "Room_depth_%d" % depth
 	room.position = Vector2(offset_x, 0)
+	room.z_index = -1  # render below player and enemies
 
 	# Background
 	var bg := ColorRect.new()
