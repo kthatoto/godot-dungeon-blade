@@ -140,9 +140,12 @@ func _do_attack() -> void:
 	tween.tween_property(sprite, ^"rotation", deg_to_rad(-15.0), 0.08)
 	tween.tween_property(sprite, ^"rotation", 0.0, 0.15)
 
-	# Position sword hitbox based on facing
-	var sword_offset := facing * 30.0
+	# Position sword hitbox based on facing (wider range)
+	var sword_offset := facing * 40.0
 	$SwordHitbox/CollisionShape2D.position = sword_offset
+
+	# Slash visual effect
+	_spawn_slash_effect(sword_offset)
 
 func _on_sword_hit(area: Area2D) -> void:
 	# Hit enemy or boss hurtbox
@@ -200,6 +203,29 @@ func _die() -> void:
 	var gm = _get_game_manager()
 	if gm:
 		gm.player_died()
+
+func _spawn_slash_effect(offset: Vector2) -> void:
+	var slash := Node2D.new()
+	slash.name = "SlashFX"
+	slash.position = offset
+	slash.rotation = atan2(facing.y, facing.x)
+	add_child(slash)
+
+	# Arc shape using multiple small rects
+	for i in range(5):
+		var arc := ColorRect.new()
+		var angle_offset: float = deg_to_rad(-40 + i * 20)
+		arc.size = Vector2(24, 3)
+		arc.position = Vector2(cos(angle_offset) * 20, sin(angle_offset) * 20)
+		arc.rotation = angle_offset
+		arc.color = Color(1.0, 0.95, 0.7, 0.9)
+		slash.add_child(arc)
+
+	# Animate: scale up and fade
+	var slash_tween := create_tween()
+	slash_tween.tween_property(slash, ^"scale", Vector2(1.5, 1.5), 0.1)
+	slash_tween.parallel().tween_property(slash, ^"modulate", Color(1, 1, 1, 0), 0.15)
+	slash_tween.tween_callback(slash.queue_free)
 
 ## --- Skill actions ---
 

@@ -36,7 +36,7 @@ func _initialize() -> void:
 	var sword_shape := CollisionShape2D.new()
 	sword_shape.name = "CollisionShape2D"
 	var sword_rect := RectangleShape2D.new()
-	sword_rect.size = Vector2(40, 20)
+	sword_rect.size = Vector2(60, 40)
 	sword_shape.shape = sword_rect
 	sword_shape.position = Vector2(30, 0)
 	sword_shape.disabled = true

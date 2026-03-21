@@ -5,6 +5,7 @@ const SAVE_PATH := "user://save_data.json"
 
 var data: Dictionary = {
 	"persistent_gold": 0,
+	"boss_cleared": false,
 	"upgrades": {
 		"max_hp": 0,
 		"attack_damage": 0,
@@ -42,6 +43,8 @@ func load_game() -> void:
 			for key in data["upgrades"]:
 				if key in loaded["upgrades"]:
 					data["upgrades"][key] = int(loaded["upgrades"][key])
+		if "boss_cleared" in loaded:
+			data["boss_cleared"] = bool(loaded["boss_cleared"])
 		if "skills_unlocked" in loaded and loaded["skills_unlocked"] is Array:
 			data["skills_unlocked"] = loaded["skills_unlocked"]
 
@@ -72,9 +75,16 @@ func unlock_skill(skill_id: String) -> void:
 func has_skill(skill_id: String) -> bool:
 	return skill_id in data["skills_unlocked"]
 
+func is_boss_cleared() -> bool:
+	return data["boss_cleared"]
+
+func mark_boss_cleared() -> void:
+	data["boss_cleared"] = true
+
 func reset_save() -> void:
 	data = {
 		"persistent_gold": 0,
+		"boss_cleared": false,
 		"upgrades": {
 			"max_hp": 0,
 			"attack_damage": 0,

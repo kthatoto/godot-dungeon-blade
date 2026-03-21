@@ -79,7 +79,10 @@ func _continue_game() -> void:
 	var gm := _get_game_manager()
 	if gm:
 		gm.reset_for_new_run()
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	if SaveManager.is_boss_cleared():
+		get_tree().change_scene_to_file("res://scenes/endless.tscn")
+	else:
+		get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 func _refresh_ui() -> void:
 	if _gold_label:

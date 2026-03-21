@@ -15,7 +15,7 @@ var player_ref: CharacterBody2D = null
 var endless_mode: bool = false
 var dungeon_depth: int = 0
 var _endless_enemy_count: int = 0
-var _endless_rooms: Array[Node2D] = []  # keep max 2 rooms
+var _endless_rooms: Array[Node2D] = []
 var _endless_current_offset_x: float = 0.0
 var _endless_blocker: StaticBody2D = null
 
@@ -25,21 +25,18 @@ const RoomGenerator = preload("res://scripts/room_generator.gd")
 func _ready() -> void:
 	door_opened.connect(_on_door_opened)
 
+# --- Fixed rooms (first run) ---
+
 func register_enemy(room_index: int) -> void:
 	if room_index >= 0 and room_index < 3:
 		enemies_per_room[room_index] += 1
 
-func register_enemy_endless() -> void:
-	_endless_enemy_count += 1
-
 func _on_enemy_died(enemy: CharacterBody2D) -> void:
 	if is_game_over:
 		return
-
 	if endless_mode:
 		_on_enemy_died_endless(enemy)
 		return
-
 	var room_idx: int = _get_room_from_pos(enemy.global_position.x)
 	if room_idx >= 0 and room_idx < 3:
 		enemies_per_room[room_idx] -= 1
@@ -50,6 +47,28 @@ func _on_enemy_died(enemy: CharacterBody2D) -> void:
 	if room_idx >= 0 and room_idx < 3 and enemies_per_room[room_idx] <= 0:
 		door_opened.emit(room_idx)
 
+func _on_boss_died() -> void:
+	if is_game_over:
+		return
+	if endless_mode:
+		_on_boss_died_endless()
+		return
+	# Fixed boss: victory → shop
+	run_gold += 100
+	enemies_per_room[2] = 0
+	is_game_over = true
+	SaveManager.mark_boss_cleared()
+	game_over.emit(true)
+	get_tree().create_timer(2.0).timeout.connect(_go_to_shop)
+
+# --- Endless mode ---
+
+func start_endless_run() -> void:
+	endless_mode = true
+	dungeon_depth = 1
+	_endless_current_offset_x = 0.0
+	_generate_next_endless_room()
+
 func _on_enemy_died_endless(enemy: CharacterBody2D) -> void:
 	if enemy and "gold_value" in enemy:
 		run_gold += enemy.gold_value
@@ -59,36 +78,13 @@ func _on_enemy_died_endless(enemy: CharacterBody2D) -> void:
 	if _endless_enemy_count <= 0:
 		_open_endless_door()
 
-func _on_boss_died() -> void:
-	if is_game_over:
-		return
-
-	if endless_mode:
-		run_gold += 100
-		_endless_enemy_count -= 1
-		if _endless_enemy_count <= 0:
-			_open_endless_door()
-		return
-
+func _on_boss_died_endless() -> void:
 	run_gold += 100
-	enemies_per_room[2] = 0
-	door_opened.emit(2)
-	# Enter endless mode instead of game over
-	is_game_over = false
-	get_tree().create_timer(1.5).timeout.connect(_enter_endless_mode)
-
-func _enter_endless_mode() -> void:
-	endless_mode = true
-	dungeon_depth = 3
-	_endless_current_offset_x = 3 * ROOM_W  # start after the 3 fixed rooms
-
-	# Remove fixed room door blockers
-	var main = get_tree().current_scene
-	if main == null:
-		return
-
-	# Generate first endless room
-	_generate_next_endless_room()
+	_endless_enemy_count -= 1
+	if _endless_enemy_count < 0:
+		_endless_enemy_count = 0
+	if _endless_enemy_count <= 0:
+		_open_endless_door()
 
 func _generate_next_endless_room() -> void:
 	var main = get_tree().current_scene
@@ -104,24 +100,25 @@ func _generate_next_endless_room() -> void:
 	var lights_node := main.get_node_or_null("TorchLights")
 	if lights_node == null:
 		lights_node = Node2D.new()
-		lights_node.name = "TorchLights_Endless"
+		lights_node.name = "TorchLights"
 		main.add_child(lights_node)
 	RoomGenerator.add_torch_lights(lights_node, _endless_current_offset_x)
 
-	# Add door blocker at right side of new room
-	var blocker_pos := Vector2(
-		_endless_current_offset_x + ROOM_W - 32,
-		360
-	)
-	_endless_blocker = RoomGenerator.add_door_blocker(
-		main, "DoorBlocker_endless", blocker_pos
-	)
+	# Add darkness if not present
+	if main.get_node_or_null("Darkness") == null:
+		var darkness := CanvasModulate.new()
+		darkness.name = "Darkness"
+		darkness.color = Color(0.4, 0.35, 0.3)
+		main.add_child(darkness)
+
+	# Door blocker at right side
+	var blocker_pos := Vector2(_endless_current_offset_x + ROOM_W - 32, 360)
+	_endless_blocker = RoomGenerator.add_door_blocker(main, "DoorBlocker_endless", blocker_pos)
 
 	# Spawn enemies
 	_endless_enemy_count = 0
 	var enemies := RoomGenerator.spawn_enemies_for_room(room, dungeon_depth, is_boss, main)
 	for enemy in enemies:
-		# Connect death signals
 		if enemy.has_signal("died"):
 			if enemy.get_script() == load("res://scripts/boss_controller.gd"):
 				enemy.died.connect(_on_boss_died)
@@ -147,10 +144,11 @@ func _open_endless_door() -> void:
 			_endless_blocker.queue_free()
 		_endless_blocker = null
 
-	# Generate next room after short delay
 	dungeon_depth += 1
 	_endless_current_offset_x += ROOM_W
 	get_tree().create_timer(0.5).timeout.connect(_generate_next_endless_room)
+
+# --- Common ---
 
 func player_died() -> void:
 	if is_game_over:
@@ -179,10 +177,8 @@ func reset_for_new_run() -> void:
 	_endless_blocker = null
 
 func update_current_room() -> void:
-	if player_ref == null:
+	if player_ref == null or endless_mode:
 		return
-	if endless_mode:
-		return  # room tracking handled by dungeon_depth in endless mode
 	var new_room: int = _get_room_from_pos(player_ref.global_position.x)
 	if new_room != current_room and new_room >= 0 and new_room < 3:
 		current_room = new_room
