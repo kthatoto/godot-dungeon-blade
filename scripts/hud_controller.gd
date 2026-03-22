@@ -237,11 +237,11 @@ func _update_skill_hud(skill_sys: Node) -> void:
 func _create_item_hotbar() -> void:
 	var container := HBoxContainer.new()
 	container.name = "ItemBar"
-	container.anchor_left = 0.0
+	container.anchor_left = 1.0
 	container.anchor_top = 1.0
-	container.anchor_right = 0.0
+	container.anchor_right = 1.0
 	container.anchor_bottom = 1.0
-	container.offset_left = 10
+	container.offset_left = -240
 	container.offset_top = -66
 	container.offset_bottom = -10
 	container.visible = false
