@@ -359,20 +359,30 @@ func _build_gold_hud() -> Control:
 	var hud := Control.new()
 	hud.name = "TownHUD"
 
+	# Gold + status panel background
 	var bg := ColorRect.new()
 	bg.name = "HUDBg"
-	bg.color = Color(0.0, 0.0, 0.0, 0.4)
-	bg.size = Vector2(160, 36)
+	bg.color = Color(0.0, 0.0, 0.0, 0.5)
+	bg.size = Vector2(320, 120)
 	bg.position = Vector2(10, 10)
 	hud.add_child(bg)
 
 	var gold_label := Label.new()
 	gold_label.name = "GoldDisplay"
 	gold_label.text = "Gold: 0"
-	gold_label.position = Vector2(20, 16)
+	gold_label.position = Vector2(20, 14)
 	gold_label.add_theme_font_size_override("font_size", 18)
 	gold_label.add_theme_color_override("font_color", Color(0.9, 0.75, 0.2))
 	hud.add_child(gold_label)
+
+	var status_label := Label.new()
+	status_label.name = "StatusDisplay"
+	status_label.text = ""
+	status_label.position = Vector2(20, 38)
+	status_label.size = Vector2(290, 90)
+	status_label.add_theme_font_size_override("font_size", 12)
+	status_label.add_theme_color_override("font_color", Color(0.85, 0.82, 0.75))
+	hud.add_child(status_label)
 
 	return hud
 
