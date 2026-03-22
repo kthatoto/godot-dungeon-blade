@@ -2,8 +2,9 @@ extends Node2D
 ## res://scripts/town_controller.gd — Town scene: NPC buildings, shop overlays, dungeon entry
 
 var _active_shop: String = ""
-var _prompt_labels: Dictionary = {}  # building_name -> Label
+var _prompt_labels: Dictionary = {}
 var _player_ref: CharacterBody2D = null
+var _shop_overlay_ref: CanvasLayer = null
 
 const BUILDINGS := {
 	"Blacksmith": { "interact": "blacksmith", "label": "Blacksmith", "range": 130.0 },
@@ -126,9 +127,13 @@ func _open_shop_overlay(shop_type: String) -> void:
 		return
 	_active_shop = shop_type
 
+	if _shop_overlay_ref and is_instance_valid(_shop_overlay_ref):
+		remove_child(_shop_overlay_ref)
+		_shop_overlay_ref.free()
 	var canvas := CanvasLayer.new()
 	canvas.name = "ShopOverlay"
 	canvas.layer = 20
+	_shop_overlay_ref = canvas
 	add_child(canvas)
 
 	# Dark background — viewport is always 1280x720
@@ -371,9 +376,10 @@ func _build_trainer_shop(vbox: VBoxContainer) -> void:
 
 func _close_shop_overlay() -> void:
 	_active_shop = ""
-	var overlay := get_node_or_null("ShopOverlay")
-	if overlay:
-		overlay.queue_free()
+	if _shop_overlay_ref and is_instance_valid(_shop_overlay_ref):
+		remove_child(_shop_overlay_ref)
+		_shop_overlay_ref.free()
+	_shop_overlay_ref = null
 
 func _buy_blacksmith_item(item_id: String) -> void:
 	var item: Dictionary = BLACKSMITH_ITEMS[item_id]
