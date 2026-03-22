@@ -164,6 +164,12 @@ func player_died() -> void:
 
 func _go_to_shop() -> void:
 	SaveManager.add_gold(run_gold)
+	# Save remaining consumables back to persistent inventory
+	for item_id in run_inventory:
+		var item_data: Dictionary = ItemDatabase.get_item(item_id)
+		if item_data.get("type", "") == "consumable":
+			SaveManager.data["inventory"].append(item_id)
+	run_inventory.clear()
 	SaveManager.save_game()
 	run_gold = 0
 	get_tree().change_scene_to_file("res://scenes/town.tscn")
@@ -196,7 +202,13 @@ func reset_for_new_run() -> void:
 	run_gold = 0
 	current_room = 0
 	player_ref = null
+	# Load persistent consumables into run inventory
 	run_inventory.clear()
+	for item_id in SaveManager.get_inventory():
+		run_inventory.append(item_id)
+	# Clear persistent inventory (items are now "in the dungeon")
+	SaveManager.data["inventory"] = []
+	SaveManager.save_game()
 	endless_mode = false
 	dungeon_depth = 0
 	_endless_enemy_count = 0

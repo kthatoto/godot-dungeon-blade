@@ -214,10 +214,19 @@ func _build_blacksmith_shop(vbox: VBoxContainer) -> void:
 		var owned: bool = _has_item(item_id)
 		if owned:
 			var owned_label := Label.new()
-			owned_label.text = "OWNED"
-			owned_label.add_theme_font_size_override("font_size", 14)
+			owned_label.text = "EQUIPPED"
+			owned_label.add_theme_font_size_override("font_size", 13)
 			owned_label.add_theme_color_override("font_color", Color(0.3, 0.9, 0.3))
+			owned_label.custom_minimum_size = Vector2(70, 0)
 			row.add_child(owned_label)
+			# Sell button (half price)
+			var sell_price: int = item["cost"] / 2
+			var sell_btn := Button.new()
+			sell_btn.text = "SELL %dG" % sell_price
+			sell_btn.custom_minimum_size = Vector2(90, 28)
+			sell_btn.add_theme_font_size_override("font_size", 12)
+			sell_btn.pressed.connect(_sell_item.bind(item_id, sell_price))
+			row.add_child(sell_btn)
 		else:
 			var buy_btn := Button.new()
 			buy_btn.text = "BUY"
@@ -395,6 +404,17 @@ func _buy_potion_item(item_id: String) -> void:
 		# Rebuild overlay
 		_close_shop_overlay()
 		_open_shop_overlay("potion")
+
+func _sell_item(item_id: String, price: int) -> void:
+	var item: Dictionary = BLACKSMITH_ITEMS[item_id]
+	if item["type"] == "weapon" and SaveManager.get_equipped_weapon() == item_id:
+		SaveManager.equip_weapon("")
+	elif item["type"] == "armor" and SaveManager.get_equipped_armor() == item_id:
+		SaveManager.equip_armor("")
+	SaveManager.add_gold(price)
+	SaveManager.save_game()
+	_close_shop_overlay()
+	_open_shop_overlay("blacksmith")
 
 func _buy_stat_upgrade(key: String) -> void:
 	var level: int = SaveManager.get_upgrade_level(key)
