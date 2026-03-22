@@ -55,14 +55,16 @@ func _initialize() -> void:
 	camera.position_smoothing_speed = 8.0
 	player.add_child(camera)
 
-	# --- HUD (gold display) ---
+	# --- HUD (shared with dungeon) ---
 	var canvas_layer := CanvasLayer.new()
 	canvas_layer.name = "CanvasLayer"
 	canvas_layer.layer = 10
 	root.add_child(canvas_layer)
 
-	var gold_hud := _build_gold_hud()
-	canvas_layer.add_child(gold_hud)
+	var hud_scene: PackedScene = load("res://scenes/hud.tscn")
+	var hud = hud_scene.instantiate()
+	hud.name = "HUD"
+	canvas_layer.add_child(hud)
 
 	# --- Torches ---
 	_build_torches(root, torch_tex)
@@ -355,36 +357,6 @@ func _add_torch_lights(root: Node2D) -> void:
 		light.texture_scale = 7.0 if is_center else 4.0
 		lights.add_child(light)
 
-func _build_gold_hud() -> Control:
-	var hud := Control.new()
-	hud.name = "TownHUD"
-
-	# Gold + status panel background
-	var bg := ColorRect.new()
-	bg.name = "HUDBg"
-	bg.color = Color(0.0, 0.0, 0.0, 0.5)
-	bg.size = Vector2(320, 120)
-	bg.position = Vector2(10, 10)
-	hud.add_child(bg)
-
-	var gold_label := Label.new()
-	gold_label.name = "GoldDisplay"
-	gold_label.text = "Gold: 0"
-	gold_label.position = Vector2(20, 14)
-	gold_label.add_theme_font_size_override("font_size", 18)
-	gold_label.add_theme_color_override("font_color", Color(0.9, 0.75, 0.2))
-	hud.add_child(gold_label)
-
-	var status_label := Label.new()
-	status_label.name = "StatusDisplay"
-	status_label.text = ""
-	status_label.position = Vector2(20, 38)
-	status_label.size = Vector2(290, 90)
-	status_label.add_theme_font_size_override("font_size", 12)
-	status_label.add_theme_color_override("font_color", Color(0.85, 0.82, 0.75))
-	hud.add_child(status_label)
-
-	return hud
 
 func _create_light_texture() -> Texture2D:
 	var img := Image.create(128, 128, false, Image.FORMAT_RGBA8)

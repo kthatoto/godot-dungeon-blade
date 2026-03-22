@@ -1,12 +1,14 @@
 extends Control
-## res://scripts/hud_controller.gd — HUD showing HP, room, gold, skills, and item hotbar
+## res://scripts/hud_controller.gd — Unified HUD for town and dungeon
 
 const ItemDatabase = preload("res://scripts/item_database.gd")
 
 @onready var hp_bar: ProgressBar = $InfoPanel/VBox/HPRow/HPBar
 @onready var hp_value: Label = $InfoPanel/VBox/HPRow/HPValue
-@onready var room_label: Label = $InfoPanel/VBox/RoomLabel
-@onready var gold_value: Label = $GoldPanel/GoldRow/GoldValue
+@onready var gold_value: Label = $InfoPanel/VBox/GoldRow/GoldValue
+@onready var equip_label: Label = $InfoPanel/VBox/EquipLabel
+@onready var stats_label: Label = $InfoPanel/VBox/StatsLabel
+@onready var room_label: Label = $RoomPanel/RoomLabel
 
 var _overlay: ColorRect = null
 var _message_label: Label = null
@@ -18,16 +20,14 @@ var _item_bar_created: bool = false
 
 func _ready() -> void:
 	_update_hp(100, 100)
-	_update_room(0)
 	_update_gold(0)
-	# Skill and item bars created on demand in _process
-	# Create overlay for death/victory (hidden initially)
+	_update_equip()
+	_update_room_label()
 	_create_overlay()
 
 func _create_overlay() -> void:
 	_overlay = ColorRect.new()
 	_overlay.name = "GameOverOverlay"
-	_overlay.anchors_preset = 15  # full rect
 	_overlay.anchor_right = 1.0
 	_overlay.anchor_bottom = 1.0
 	_overlay.color = Color(0, 0, 0, 0)
@@ -39,7 +39,6 @@ func _create_overlay() -> void:
 	_message_label.name = "MessageLabel"
 	_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_message_label.anchors_preset = 15
 	_message_label.anchor_right = 1.0
 	_message_label.anchor_bottom = 1.0
 	_message_label.add_theme_font_size_override("font_size", 48)
@@ -47,29 +46,29 @@ func _create_overlay() -> void:
 	_overlay.add_child(_message_label)
 
 func _process(_delta: float) -> void:
-	# Poll player HP from scene
 	var player := get_tree().get_first_node_in_group("player")
 	if player and "hp" in player and "max_hp" in player:
 		_update_hp(player.hp, player.max_hp)
 
-	# Poll game manager
 	var gm = _get_game_manager()
 	if gm:
-		if "current_room" in gm:
-			_update_room(gm.current_room)
 		if "run_gold" in gm:
 			_update_gold(SaveManager.get_gold() + gm.run_gold)
-		# Check game over
+		else:
+			_update_gold(SaveManager.get_gold())
+
 		if not _game_ended and "is_game_over" in gm and gm.is_game_over:
 			_game_ended = true
 			if player and "is_dead" in player and player.is_dead:
 				_show_game_over(false)
 			else:
 				_show_game_over(true)
-		# Update item hotbar
+
 		_update_item_hotbar(gm)
 
-	# Update skill cooldowns
+	_update_equip()
+	_update_room_label()
+
 	if player:
 		var skill_sys := player.get_node_or_null("SkillSystem")
 		if skill_sys:
@@ -99,37 +98,65 @@ func _update_hp(current: int, maximum: int) -> void:
 	if hp_value:
 		hp_value.text = "%d/%d" % [current, maximum]
 
-func _update_room(room_index: int) -> void:
-	if room_label:
-		var gm = _get_game_manager()
-		if gm and gm.endless_mode:
-			var depth: int = gm.dungeon_depth
-			var is_boss: bool = depth > 0 and depth % 5 == 0
-			room_label.text = "Depth %d%s" % [depth, " (BOSS)" if is_boss else ""]
-		else:
-			room_label.text = "Room %d / 3" % (room_index + 1)
-
 func _update_gold(amount: int) -> void:
 	if gold_value:
 		gold_value.text = str(amount)
 
+func _update_equip() -> void:
+	if equip_label == null or stats_label == null:
+		return
+	var parts: Array[String] = []
+	var weapon := SaveManager.get_equipped_weapon()
+	if weapon != "":
+		parts.append("%s(+%dATK)" % [weapon.replace("_", " ").capitalize(), SaveManager.get_weapon_bonus()])
+	var armor := SaveManager.get_equipped_armor()
+	if armor != "":
+		parts.append("%s(+%dHP)" % [armor.replace("_", " ").capitalize(), SaveManager.get_armor_bonus()])
+	equip_label.text = " | ".join(parts) if parts.size() > 0 else ""
+
+	var atk := 25 + SaveManager.get_upgrade_level("attack_damage") * 5 + SaveManager.get_weapon_bonus()
+	var max_hp := 100 + SaveManager.get_upgrade_level("max_hp") * 20 + SaveManager.get_armor_bonus()
+	stats_label.text = "ATK: %d  MaxHP: %d" % [atk, max_hp]
+
+func _update_room_label() -> void:
+	if room_label == null:
+		return
+	var gm = _get_game_manager()
+	if gm == null:
+		room_label.text = "Town"
+		return
+	if gm.endless_mode:
+		var depth: int = gm.dungeon_depth
+		var is_boss: bool = depth > 0 and depth % 5 == 0
+		room_label.text = "Depth %d%s" % [depth, " (BOSS)" if is_boss else ""]
+	elif "current_room" in gm and gm.current_room >= 0:
+		var scene_name := ""
+		if get_tree().current_scene:
+			scene_name = get_tree().current_scene.name
+		if scene_name == "Town":
+			room_label.text = "Town"
+		else:
+			room_label.text = "Room %d / 3" % (gm.current_room + 1)
+	else:
+		room_label.text = "Town"
+
 func _on_room_changed(room_index: int) -> void:
-	_update_room(room_index)
+	_update_room_label()
+
+# ===== Skill HUD (lazy creation) =====
 
 func _create_skill_hud() -> void:
 	var skill_keys := ["Q", "E", "R"]
 	var skill_names := ["Dash", "Fire", "Heal"]
 	var skill_colors := [
-		Color(0.4, 0.6, 1.0),   # blue for dash
-		Color(1.0, 0.5, 0.1),   # orange for fireball
-		Color(0.3, 0.9, 0.3),   # green for heal
+		Color(0.4, 0.6, 1.0),
+		Color(1.0, 0.5, 0.1),
+		Color(0.3, 0.9, 0.3),
 	]
 
 	var container := HBoxContainer.new()
 	container.name = "SkillBar"
-	container.anchor_left = 0.0
 	container.anchor_top = 1.0
-	container.anchor_right = 0.0
 	container.anchor_bottom = 1.0
 	container.offset_left = 10
 	container.offset_top = -66
@@ -155,40 +182,38 @@ func _create_skill_hud() -> void:
 		panel.add_theme_stylebox_override("panel", style)
 		container.add_child(panel)
 
-		var vbox := VBoxContainer.new()
-		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		panel.add_child(vbox)
+		var vbox2 := VBoxContainer.new()
+		vbox2.alignment = BoxContainer.ALIGNMENT_CENTER
+		panel.add_child(vbox2)
 
 		var key_label := Label.new()
 		key_label.text = skill_keys[i]
 		key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		key_label.add_theme_font_size_override("font_size", 16)
 		key_label.add_theme_color_override("font_color", skill_colors[i])
-		vbox.add_child(key_label)
+		vbox2.add_child(key_label)
 
 		var name_label := Label.new()
 		name_label.text = skill_names[i]
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_label.add_theme_font_size_override("font_size", 10)
 		name_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-		vbox.add_child(name_label)
+		vbox2.add_child(name_label)
 
-		# Cooldown overlay (covers panel from top down)
 		var cd_overlay := ColorRect.new()
 		cd_overlay.name = "CDOverlay"
 		cd_overlay.color = Color(0, 0, 0, 0.6)
 		cd_overlay.size = Vector2(56, 0)
-		cd_overlay.position = Vector2(0, 0)
 		cd_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		panel.add_child(cd_overlay)
 
-		# Cooldown timer text
 		var cd_label := Label.new()
 		cd_label.name = "CDLabel"
 		cd_label.text = ""
 		cd_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		cd_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		cd_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+		cd_label.anchor_right = 1.0
+		cd_label.anchor_bottom = 1.0
 		cd_label.add_theme_font_size_override("font_size", 14)
 		cd_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.8))
 		cd_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -202,7 +227,6 @@ func _create_skill_hud() -> void:
 		})
 
 func _update_skill_hud(skill_sys: Node) -> void:
-	# Check if any skill is unlocked
 	var any_unlocked: bool = false
 	for i in range(3):
 		if skill_sys.is_unlocked(i):
@@ -212,7 +236,6 @@ func _update_skill_hud(skill_sys: Node) -> void:
 	if not any_unlocked:
 		return
 
-	# Create skill bar on first use
 	if not _skill_bar_created:
 		_create_skill_hud()
 		_skill_bar_created = true
@@ -220,19 +243,19 @@ func _update_skill_hud(skill_sys: Node) -> void:
 	for i in range(_skill_slots.size()):
 		var slot: Dictionary = _skill_slots[i]
 		var unlocked: bool = skill_sys.is_unlocked(i)
-		var ratio: float = skill_sys.get_cooldown_ratio(i)
-
 		slot["panel"].visible = unlocked
 		if not unlocked:
 			continue
+		var ratio: float = skill_sys.get_cooldown_ratio(i)
 		if ratio > 0:
 			slot["cd_overlay"].size.y = 56.0 * ratio
 			slot["cd_overlay"].color = Color(0, 0, 0, 0.5)
-			var remaining: float = skill_sys.slots[i]["cooldown_current"]
-			slot["cd_label"].text = "%0.1f" % remaining
+			slot["cd_label"].text = "%0.1f" % skill_sys.slots[i]["cooldown_current"]
 		else:
 			slot["cd_overlay"].size.y = 0
 			slot["cd_label"].text = ""
+
+# ===== Item Hotbar (lazy creation) =====
 
 func _create_item_hotbar() -> void:
 	var container := HBoxContainer.new()
@@ -266,23 +289,23 @@ func _create_item_hotbar() -> void:
 		panel.add_theme_stylebox_override("panel", style)
 		container.add_child(panel)
 
-		var vbox := VBoxContainer.new()
-		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		panel.add_child(vbox)
+		var vbox2 := VBoxContainer.new()
+		vbox2.alignment = BoxContainer.ALIGNMENT_CENTER
+		panel.add_child(vbox2)
 
 		var key_label := Label.new()
 		key_label.text = str(i + 1)
 		key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		key_label.add_theme_font_size_override("font_size", 14)
 		key_label.add_theme_color_override("font_color", Color(0.8, 0.7, 0.5))
-		vbox.add_child(key_label)
+		vbox2.add_child(key_label)
 
 		var name_label := Label.new()
 		name_label.text = ""
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_label.add_theme_font_size_override("font_size", 8)
 		name_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-		vbox.add_child(name_label)
+		vbox2.add_child(name_label)
 
 		_item_slots.append({
 			"panel": panel,
@@ -294,7 +317,6 @@ func _update_item_hotbar(gm: Node) -> void:
 	if not "run_inventory" in gm:
 		return
 	var inv: Array = gm.run_inventory
-
 	if inv.size() == 0:
 		if _item_bar_created:
 			var item_bar := get_node_or_null("ItemBar")
@@ -302,7 +324,6 @@ func _update_item_hotbar(gm: Node) -> void:
 				item_bar.visible = false
 		return
 
-	# Create item bar on first use
 	if not _item_bar_created:
 		_create_item_hotbar()
 		_item_bar_created = true
@@ -318,8 +339,7 @@ func _update_item_hotbar(gm: Node) -> void:
 			var item_id: String = inv[i]
 			var item_data: Dictionary = ItemDatabase.get_item(item_id)
 			slot["name_label"].text = item_data.get("name", item_id)
-			var color: Color = item_data.get("icon_color", Color.WHITE)
-			slot["key_label"].add_theme_color_override("font_color", color)
+			slot["key_label"].add_theme_color_override("font_color", item_data.get("icon_color", Color.WHITE))
 		else:
 			slot["panel"].visible = false
 

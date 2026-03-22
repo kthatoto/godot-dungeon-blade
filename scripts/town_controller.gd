@@ -74,13 +74,7 @@ func _process(_delta: float) -> void:
 		if building_name in _prompt_labels:
 			_prompt_labels[building_name].visible = in_range
 
-	# Update status display
-	var gold_label := get_node_or_null("CanvasLayer/TownHUD/GoldDisplay")
-	if gold_label:
-		gold_label.text = "Gold: %d" % SaveManager.get_gold()
-	var status_label := get_node_or_null("CanvasLayer/TownHUD/StatusDisplay")
-	if status_label:
-		status_label.text = _build_status_text()
+	# HUD updates automatically via hud_controller.gd
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _active_shop != "":
@@ -444,39 +438,6 @@ func _get_inventory_count(item_id: String) -> int:
 func _add_item_to_inventory(item_id: String) -> void:
 	SaveManager.add_item(item_id)
 
-func _build_status_text() -> String:
-	var lines: Array[String] = []
-	# Equipment
-	var weapon := SaveManager.get_equipped_weapon()
-	var armor := SaveManager.get_equipped_armor()
-	if weapon != "":
-		lines.append("Weapon: %s (+%d ATK)" % [weapon.replace("_", " ").capitalize(), SaveManager.get_weapon_bonus()])
-	if armor != "":
-		lines.append("Armor: %s (+%d HP)" % [armor.replace("_", " ").capitalize(), SaveManager.get_armor_bonus()])
-	# Skills
-	var skill_names := {"dash": "Dash", "fireball": "Fireball", "heal": "Heal"}
-	var owned_skills: Array[String] = []
-	for sid in skill_names:
-		var lv: int = SaveManager.get_skill_level(sid)
-		if lv > 0:
-			owned_skills.append("%s Lv.%d" % [skill_names[sid], lv])
-	if owned_skills.size() > 0:
-		lines.append("Skills: %s" % ", ".join(owned_skills))
-	# Consumables
-	var inv := SaveManager.get_inventory()
-	if inv.size() > 0:
-		var counts: Dictionary = {}
-		for item_id in inv:
-			counts[item_id] = counts.get(item_id, 0) + 1
-		var parts: Array[String] = []
-		for item_id in counts:
-			parts.append("%s x%d" % [item_id.replace("_", " ").capitalize(), counts[item_id]])
-		lines.append("Items: %s" % ", ".join(parts))
-	# Stats
-	var hp := 100 + SaveManager.get_upgrade_level("max_hp") * 20 + SaveManager.get_armor_bonus()
-	var atk := 25 + SaveManager.get_upgrade_level("attack_damage") * 5 + SaveManager.get_weapon_bonus()
-	lines.append("HP: %d  ATK: %d" % [hp, atk])
-	return "\n".join(lines)
 
 func _find_player() -> CharacterBody2D:
 	var players := get_tree().get_nodes_in_group("player")
