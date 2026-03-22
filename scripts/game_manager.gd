@@ -12,7 +12,10 @@ var run_gold: int = 0
 var enemies_per_room: Array[int] = [0, 0, 0]
 var is_game_over: bool = false
 var player_ref: CharacterBody2D = null
-var run_inventory: Array[String] = []
+var run_consumables: Dictionary = {}  # item_id -> count
+
+# Fixed consumable hotbar slots
+const CONSUMABLE_SLOTS := ["health_potion", "escape_scroll"]
 
 # Endless mode
 var endless_mode: bool = false
@@ -165,36 +168,41 @@ func player_died() -> void:
 func _go_to_shop() -> void:
 	SaveManager.add_gold(run_gold)
 	# Save remaining consumables back to persistent inventory
-	for item_id in run_inventory:
-		var item_data: Dictionary = ItemDatabase.get_item(item_id)
-		if item_data.get("type", "") == "consumable":
+	for item_id in run_consumables:
+		var count: int = run_consumables[item_id]
+		for _i in range(count):
 			SaveManager.data["inventory"].append(item_id)
-	run_inventory.clear()
+	run_consumables.clear()
 	SaveManager.save_game()
 	run_gold = 0
 	get_tree().change_scene_to_file("res://scenes/town.tscn")
 
 func add_item_to_run(item_id: String) -> void:
-	run_inventory.append(item_id)
-
-func use_item(index: int, player: CharacterBody2D) -> void:
-	if index < 0 or index >= run_inventory.size():
-		return
-	var item_id: String = run_inventory[index]
 	var item_data: Dictionary = ItemDatabase.get_item(item_id)
-	if item_data.is_empty():
+	if item_data.get("type", "") == "consumable":
+		run_consumables[item_id] = run_consumables.get(item_id, 0) + 1
+	# Equipment auto-equips via SaveManager.add_item() in item_pickup.gd
+
+func use_consumable(slot_index: int, player: CharacterBody2D) -> void:
+	if slot_index < 0 or slot_index >= CONSUMABLE_SLOTS.size():
+		return
+	var item_id: String = CONSUMABLE_SLOTS[slot_index]
+	var count: int = run_consumables.get(item_id, 0)
+	if count <= 0:
 		return
 	match item_id:
 		"health_potion":
 			if player.has_method("heal_percent"):
 				player.heal_percent(0.5)
 		"escape_scroll":
-			# End run, keep gold
+			run_consumables[item_id] = count - 1
 			_go_to_shop()
 			return
 		_:
-			return  # non-consumable items cannot be "used"
-	run_inventory.remove_at(index)
+			return
+	run_consumables[item_id] = count - 1
+	if run_consumables[item_id] <= 0:
+		run_consumables.erase(item_id)
 
 func reset_for_new_run() -> void:
 	is_game_over = false
@@ -202,11 +210,10 @@ func reset_for_new_run() -> void:
 	run_gold = 0
 	current_room = 0
 	player_ref = null
-	# Load persistent consumables into run inventory
-	run_inventory.clear()
+	# Load persistent consumables into run consumables
+	run_consumables.clear()
 	for item_id in SaveManager.get_inventory():
-		run_inventory.append(item_id)
-	# Clear persistent inventory (items are now "in the dungeon")
+		run_consumables[item_id] = run_consumables.get(item_id, 0) + 1
 	SaveManager.data["inventory"] = []
 	SaveManager.save_game()
 	endless_mode = false

@@ -129,12 +129,12 @@ func _physics_process(delta: float) -> void:
 		_regen_timer = 0.0
 		_regen_accumulator = 0.0
 
-	# Item usage (keys 1-4)
-	for i in range(4):
+	# Consumable usage (keys 1-2)
+	for i in range(2):
 		if Input.is_action_just_pressed("item_%d" % (i + 1)):
 			var gm = _get_game_manager()
-			if gm:
-				gm.use_item(i, self)
+			if gm and gm.has_method("use_consumable"):
+				gm.use_consumable(i, self)
 
 func _do_attack() -> void:
 	is_attacking = true

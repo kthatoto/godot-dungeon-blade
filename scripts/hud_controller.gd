@@ -57,6 +57,12 @@ func _process(_delta: float) -> void:
 		else:
 			_update_gold(SaveManager.get_gold())
 
+		# Reset game_ended flag when game is not over (e.g. new scene)
+		if _game_ended and "is_game_over" in gm and not gm.is_game_over:
+			_game_ended = false
+			if _overlay:
+				_overlay.visible = false
+				_overlay.color = Color(0, 0, 0, 0)
 		if not _game_ended and "is_game_over" in gm and gm.is_game_over:
 			_game_ended = true
 			if player and "is_dead" in player and player.is_dead:
@@ -258,34 +264,36 @@ func _update_skill_hud(skill_sys: Node) -> void:
 # ===== Item Hotbar (lazy creation) =====
 
 func _create_item_hotbar() -> void:
+	var slot_names := ["Potion", "Scroll"]
+	var slot_colors := [Color(0.9, 0.2, 0.2), Color(0.4, 0.8, 1.0)]
+
 	var container := HBoxContainer.new()
 	container.name = "ItemBar"
 	container.anchor_left = 1.0
 	container.anchor_top = 1.0
 	container.anchor_right = 1.0
 	container.anchor_bottom = 1.0
-	container.offset_left = -240
+	container.offset_left = -140
 	container.offset_top = -66
 	container.offset_bottom = -10
-	container.visible = false
 	container.add_theme_constant_override("separation", 6)
 	add_child(container)
 
-	for i in range(4):
+	for i in range(2):
 		var panel := PanelContainer.new()
 		panel.name = "ItemSlot_%d" % i
-		panel.custom_minimum_size = Vector2(52, 52)
+		panel.custom_minimum_size = Vector2(60, 52)
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(0.08, 0.06, 0.04, 0.8)
-		style.border_color = Color(0.5, 0.4, 0.3, 0.6)
-		style.border_width_left = 1
-		style.border_width_right = 1
-		style.border_width_top = 1
-		style.border_width_bottom = 1
-		style.corner_radius_top_left = 3
-		style.corner_radius_top_right = 3
-		style.corner_radius_bottom_left = 3
-		style.corner_radius_bottom_right = 3
+		style.border_color = slot_colors[i].darkened(0.4)
+		style.border_width_left = 2
+		style.border_width_right = 2
+		style.border_width_top = 2
+		style.border_width_bottom = 2
+		style.corner_radius_top_left = 4
+		style.corner_radius_top_right = 4
+		style.corner_radius_bottom_left = 4
+		style.corner_radius_bottom_right = 4
 		panel.add_theme_stylebox_override("panel", style)
 		container.add_child(panel)
 
@@ -297,27 +305,40 @@ func _create_item_hotbar() -> void:
 		key_label.text = str(i + 1)
 		key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		key_label.add_theme_font_size_override("font_size", 14)
-		key_label.add_theme_color_override("font_color", Color(0.8, 0.7, 0.5))
+		key_label.add_theme_color_override("font_color", slot_colors[i])
 		vbox2.add_child(key_label)
 
 		var name_label := Label.new()
-		name_label.text = ""
+		name_label.text = slot_names[i]
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_label.add_theme_font_size_override("font_size", 8)
-		name_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+		name_label.add_theme_font_size_override("font_size", 9)
+		name_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 		vbox2.add_child(name_label)
+
+		var count_label := Label.new()
+		count_label.name = "Count"
+		count_label.text = "x0"
+		count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		count_label.add_theme_font_size_override("font_size", 11)
+		count_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
+		vbox2.add_child(count_label)
 
 		_item_slots.append({
 			"panel": panel,
-			"key_label": key_label,
-			"name_label": name_label,
+			"count_label": count_label,
 		})
 
 func _update_item_hotbar(gm: Node) -> void:
-	if not "run_inventory" in gm:
+	if not "run_consumables" in gm:
 		return
-	var inv: Array = gm.run_inventory
-	if inv.size() == 0:
+	var consumables: Dictionary = gm.run_consumables
+	var has_any: bool = false
+	for key in consumables:
+		if consumables[key] > 0:
+			has_any = true
+			break
+
+	if not has_any:
 		if _item_bar_created:
 			var item_bar := get_node_or_null("ItemBar")
 			if item_bar:
@@ -332,16 +353,15 @@ func _update_item_hotbar(gm: Node) -> void:
 	if item_bar:
 		item_bar.visible = true
 
+	var slot_ids := ["health_potion", "escape_scroll"]
 	for i in range(_item_slots.size()):
 		var slot: Dictionary = _item_slots[i]
-		if i < inv.size():
-			slot["panel"].visible = true
-			var item_id: String = inv[i]
-			var item_data: Dictionary = ItemDatabase.get_item(item_id)
-			slot["name_label"].text = item_data.get("name", item_id)
-			slot["key_label"].add_theme_color_override("font_color", item_data.get("icon_color", Color.WHITE))
+		var count: int = consumables.get(slot_ids[i], 0)
+		slot["count_label"].text = "x%d" % count
+		if count > 0:
+			slot["count_label"].add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
 		else:
-			slot["panel"].visible = false
+			slot["count_label"].add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
 
 func _get_game_manager() -> Node:
 	var root_children := get_tree().root.get_children()
