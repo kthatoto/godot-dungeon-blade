@@ -86,3 +86,8 @@ func is_unlocked(slot_index: int) -> bool:
 	if slot_index < 0 or slot_index >= slots.size():
 		return false
 	return slots[slot_index]["unlocked"]
+
+func get_skill_level(slot_index: int) -> int:
+	if slot_index < 0 or slot_index >= slots.size():
+		return 0
+	return SaveManager.get_skill_level(slots[slot_index]["id"])

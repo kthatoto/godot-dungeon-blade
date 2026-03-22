@@ -236,38 +236,78 @@ func _spawn_slash_effect(offset: Vector2) -> void:
 
 ## --- Skill actions ---
 
+func _get_skill_level(skill_id: String) -> int:
+	var skill_sys := get_node_or_null("SkillSystem")
+	if skill_sys == null:
+		return 1
+	var idx := {"dash": 0, "fireball": 1, "heal": 2}.get(skill_id, 0)
+	return skill_sys.get_skill_level(idx)
+
 func perform_dash() -> void:
 	if is_dead:
 		return
+	var lv := _get_skill_level("dash")
 	_dash_dir = facing if facing.length() > 0.1 else Vector2.DOWN
-	_dash_speed = 600.0
-	_dash_timer = 0.15
-	_invincible_timer = 0.2  # brief invincibility during dash
-	# Visual: blue-white flash
+	# Lv2: longer distance, Lv3: damage at dash end
+	_dash_speed = 600.0 if lv < 2 else 800.0
+	_dash_timer = 0.15 if lv < 2 else 0.22
+	_invincible_timer = 0.2 if lv < 2 else 0.3
 	sprite.modulate = Color(0.5, 0.7, 1.0, 0.7)
+	# Lv3: damage enemies at dash destination
+	if lv >= 3:
+		get_tree().create_timer(_dash_timer + 0.05).timeout.connect(_dash_attack)
+
+func _dash_attack() -> void:
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	for enemy in enemies:
+		if enemy is CharacterBody2D and is_instance_valid(enemy):
+			var dist: float = global_position.distance_to(enemy.global_position)
+			if dist < 60.0 and enemy.has_method("take_damage"):
+				enemy.take_damage(attack_damage)
+				var kb_dir := (enemy.global_position - global_position).normalized()
+				enemy.velocity = kb_dir * 200.0
+	# Visual: slash at end position
+	_spawn_slash_effect(Vector2.ZERO)
 
 func perform_fireball() -> void:
 	if is_dead:
 		return
+	var lv := _get_skill_level("fireball")
 	var fireball_scene := load("res://scenes/fireball.tscn") as PackedScene
 	if fireball_scene == null:
 		return
-	var fireball := fireball_scene.instantiate()
-	fireball.global_position = global_position + facing * 30.0
-	fireball.direction = facing if facing.length() > 0.1 else Vector2.DOWN
-	fireball.damage = attack_damage * 2
-	get_tree().current_scene.add_child(fireball)
+	var dir := facing if facing.length() > 0.1 else Vector2.DOWN
+	var base_damage := attack_damage * 2
+	if lv >= 2:
+		base_damage = attack_damage * 3
+	if lv >= 3:
+		# 3-way spread
+		for angle_deg in [-15.0, 0.0, 15.0]:
+			var spread_dir := dir.rotated(deg_to_rad(angle_deg))
+			var fb := fireball_scene.instantiate()
+			fb.global_position = global_position + spread_dir * 30.0
+			fb.direction = spread_dir
+			fb.damage = base_damage
+			get_tree().current_scene.call_deferred("add_child", fb)
+	else:
+		var fireball := fireball_scene.instantiate()
+		fireball.global_position = global_position + dir * 30.0
+		fireball.direction = dir
+		fireball.damage = base_damage
+		get_tree().current_scene.call_deferred("add_child", fireball)
 
 func perform_heal() -> void:
 	if is_dead:
 		return
-	var heal_amount := int(max_hp * 0.3)
+	var lv := _get_skill_level("heal")
+	# Lv1: 30%, Lv2+: 50%
+	var ratio := 0.3 if lv < 2 else 0.5
+	var heal_amount := int(max_hp * ratio)
 	hp = mini(hp + heal_amount, max_hp)
 	# Visual: green flash
 	var tween := create_tween()
 	tween.tween_property(sprite, ^"modulate", Color(0.3, 1.0, 0.3), 0.1)
 	tween.tween_property(sprite, ^"modulate", Color.WHITE, 0.3)
-	# Scale pulse
 	var tween2 := create_tween()
 	tween2.tween_property(sprite, ^"scale", Vector2(2.3, 2.3), 0.1)
 	tween2.tween_property(sprite, ^"scale", Vector2(2.0, 2.0), 0.2)

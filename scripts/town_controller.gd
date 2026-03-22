@@ -26,10 +26,24 @@ const POTION_ITEMS := {
 }
 
 const SKILLS := {
-	"dash":     { "cost": 100, "label": "Dash (Q)",     "desc": "Quick dodge, 3s CD" },
-	"fireball": { "cost": 200, "label": "Fireball (E)", "desc": "Ranged attack, 5s CD" },
-	"heal":     { "cost": 150, "label": "Heal (R)",     "desc": "Restore 30% HP, 10s CD" },
+	"dash":     { "cost": 100, "label": "Dash (Q)", "desc": [
+		"Quick dodge, 3s CD",
+		"Lv2: Longer dash + faster CD",
+		"Lv3: Damage enemies at dash end",
+	]},
+	"fireball": { "cost": 200, "label": "Fireball (E)", "desc": [
+		"Ranged attack, 5s CD",
+		"Lv2: 3x damage",
+		"Lv3: 3-way spread shot",
+	]},
+	"heal":     { "cost": 150, "label": "Heal (R)", "desc": [
+		"Restore 30% HP, 10s CD",
+		"Lv2: Restore 50% HP",
+		"Lv3: 50% HP + 7s CD",
+	]},
 }
+
+const SKILL_UPGRADE_COSTS := {1: 0, 2: 300, 3: 500}  # level -> cost to reach that level
 
 const STAT_UPGRADES := {
 	"max_hp":        { "base_cost": 50, "label": "Max HP",   "desc": "+20 HP" },
@@ -342,42 +356,57 @@ func _build_trainer_shop(vbox: VBoxContainer) -> void:
 
 	for skill_id in SKILLS:
 		var skill: Dictionary = SKILLS[skill_id]
+		var level: int = SaveManager.get_skill_level(skill_id)
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
+		row.add_theme_constant_override("separation", 8)
 		vbox.add_child(row)
 
 		var name_label := Label.new()
 		name_label.text = skill["label"]
-		name_label.custom_minimum_size = Vector2(140, 0)
-		name_label.add_theme_font_size_override("font_size", 16)
+		name_label.custom_minimum_size = Vector2(110, 0)
+		name_label.add_theme_font_size_override("font_size", 15)
 		row.add_child(name_label)
 
+		var lv_label := Label.new()
+		lv_label.text = "Lv.%d" % level if level > 0 else "--"
+		lv_label.custom_minimum_size = Vector2(40, 0)
+		lv_label.add_theme_font_size_override("font_size", 14)
+		lv_label.add_theme_color_override("font_color", Color(0.5, 0.8, 1.0) if level > 0 else Color(0.4, 0.4, 0.4))
+		row.add_child(lv_label)
+
+		# Show description for next level
+		var desc_texts: Array = skill["desc"]
+		var desc_idx: int = mini(level, desc_texts.size() - 1)
 		var desc_label := Label.new()
-		desc_label.text = skill["desc"]
-		desc_label.custom_minimum_size = Vector2(160, 0)
-		desc_label.add_theme_font_size_override("font_size", 14)
+		desc_label.text = desc_texts[desc_idx]
+		desc_label.custom_minimum_size = Vector2(190, 0)
+		desc_label.add_theme_font_size_override("font_size", 12)
 		desc_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
 		row.add_child(desc_label)
 
-		if SaveManager.has_skill(skill_id):
-			var owned_label := Label.new()
-			owned_label.text = "OWNED"
-			owned_label.add_theme_font_size_override("font_size", 14)
-			owned_label.add_theme_color_override("font_color", Color(0.3, 0.9, 0.3))
-			row.add_child(owned_label)
+		if level >= 3:
+			var max_label := Label.new()
+			max_label.text = "MAX"
+			max_label.add_theme_font_size_override("font_size", 14)
+			max_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+			row.add_child(max_label)
 		else:
+			var next_level: int = level + 1
+			var cost: int = skill["cost"] if level == 0 else SKILL_UPGRADE_COSTS.get(next_level, 500)
 			var cost_label := Label.new()
-			cost_label.text = "%dG" % skill["cost"]
-			cost_label.custom_minimum_size = Vector2(60, 0)
-			cost_label.add_theme_font_size_override("font_size", 16)
+			cost_label.text = "%dG" % cost
+			cost_label.custom_minimum_size = Vector2(50, 0)
+			cost_label.add_theme_font_size_override("font_size", 14)
 			cost_label.add_theme_color_override("font_color", Color(0.9, 0.75, 0.2))
 			row.add_child(cost_label)
 
+			var btn_text: String = "BUY" if level == 0 else "UP"
 			var buy_btn := Button.new()
-			buy_btn.text = "BUY"
-			buy_btn.custom_minimum_size = Vector2(70, 28)
-			buy_btn.disabled = SaveManager.get_gold() < skill["cost"]
-			buy_btn.pressed.connect(_buy_skill.bind(skill_id))
+			buy_btn.text = btn_text
+			buy_btn.custom_minimum_size = Vector2(55, 26)
+			buy_btn.add_theme_font_size_override("font_size", 13)
+			buy_btn.disabled = SaveManager.get_gold() < cost
+			buy_btn.pressed.connect(_buy_skill.bind(skill_id, cost))
 			row.add_child(buy_btn)
 
 func _close_shop_overlay() -> void:
@@ -425,10 +454,12 @@ func _buy_stat_upgrade(key: String) -> void:
 		_close_shop_overlay()
 		_open_shop_overlay("trainer")
 
-func _buy_skill(skill_id: String) -> void:
-	var cost: int = SKILLS[skill_id]["cost"]
+func _buy_skill(skill_id: String, cost: int = -1) -> void:
+	if cost < 0:
+		cost = SKILLS[skill_id]["cost"]
 	if SaveManager.spend_gold(cost):
-		SaveManager.unlock_skill(skill_id)
+		var current_level: int = SaveManager.get_skill_level(skill_id)
+		SaveManager.set_skill_level(skill_id, current_level + 1)
 		SaveManager.save_game()
 		# Rebuild overlay
 		_close_shop_overlay()
